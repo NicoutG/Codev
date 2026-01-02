@@ -1,0 +1,29 @@
+Installer backend :
+cd .\src\indicateurs\backend\
+python -m venv venv
+source venv/bin/activate
+uvicorn main:app --reload
+
+Lancer backend :
+cd .\src\indicateurs\backend\
+source venv/bin/activate
+uvicorn main:app --reload
+
+Installer frontend :
+cd .\src\indicateurs\frontend\
+npm create vite@latest frontend -- --template react
+cd frontend
+npm install
+npm install react-router-dom
+npm run dev
+
+Lancer frontend :
+cd .\src\indicateurs\frontend\frontend\
+npm run dev
+
+Accéder à la page :
+http://localhost:5173/
+
+Déboguer :
+F12
+
