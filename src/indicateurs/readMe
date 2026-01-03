@@ -6,7 +6,7 @@ uvicorn main:app --reload
 
 Lancer backend :
 cd .\src\indicateurs\backend\
-source venv/bin/activate
+.\venv\Scripts\Activate.ps1
 uvicorn main:app --reload
 
 Installer frontend :
