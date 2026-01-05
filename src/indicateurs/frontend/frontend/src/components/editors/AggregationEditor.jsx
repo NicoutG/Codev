@@ -1,4 +1,4 @@
-import ConditionEditor from "./ConditionEditor";
+import TableSelectionEditor from "./TableSelectionEditor";
 
 export default function AggregationEditor({ value, onChange }) {
   return (
@@ -14,29 +14,10 @@ export default function AggregationEditor({ value, onChange }) {
         <option value="avg">avg</option>
       </select>
 
-      <div>
-        <strong>Tables</strong>
-        <input
-          placeholder="ex: diplome"
-          value={(value.subject?.tables || []).join(",")}
-          onChange={e =>
-            onChange({
-              ...value,
-              subject: {
-                ...(value.subject || {}),
-                tables: e.target.value
-                  .split(",")
-                  .map(t => t.trim())
-              }
-            })
-          }
-        />
-      </div>
-
-      <ConditionEditor
-        value={value.condition || null}
-        onChange={cond =>
-          onChange({ ...value, condition: cond })
+      <TableSelectionEditor
+        value={value.subject || { tables: [], condition: null }}
+        onChange={subject =>
+          onChange({ ...value, subject })
         }
       />
     </div>

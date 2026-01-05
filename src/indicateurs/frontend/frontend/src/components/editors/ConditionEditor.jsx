@@ -4,13 +4,19 @@ const OPS = ["=", "!=", "<", "<=", ">", ">="];
 
 export default function ConditionEditor({ value, onChange }) {
   /* ======================
-     Pas encore de condition
+     Aucune condition
      ====================== */
-  if (!value) {
+  if (
+    value == null ||
+    (Array.isArray(value) && value.length === 0) ||
+    (typeof value === "object" && Object.keys(value).length === 0)
+  ) {
     return (
       <button
         onClick={() =>
-          onChange({ "=": [{ col: "" }, 0] })
+          onChange({
+            "=": [null, null]
+          })
         }
       >
         + Condition
@@ -58,7 +64,7 @@ export default function ConditionEditor({ value, onChange }) {
         <button
           onClick={() =>
             onChange({
-              [key]: [...items, { "=": [{ col: "" }, 0] }]
+              [key]: [...items, { "=": [null, null] }]
             })
           }
         >

@@ -46,6 +46,8 @@ export default function IndicatorCreate() {
     <div style={{ padding: 20 }}>
       <h1>Créer un indicateur</h1>
 
+      <h2>Sujet</h2>
+      
       <SubjectBlock
         value={indicator.sujet}
         onChange={sujet =>

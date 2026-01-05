@@ -1,93 +1,67 @@
-import AggregationEditor from "./AggregationEditor";
+import ValueEditor from "./ValueEditor";
+
+const OPS = ["+", "-", "*", "/"];
 
 export default function ExpressionEditor({ value, onChange }) {
-  if (value == null) {
-    return <button onClick={() => onChange(0)}>+ Expression</button>;
-  }
+  /* ======================
+     Ajouter une expression
+     ====================== */
+  const wrapWithOp = () => {
+    onChange({
+      op: "+",
+      args: [value ?? 0, 0]
+    });
+  };
 
-  // nombre
-  if (typeof value === "number") {
-    return (
-      <input
-        type="number"
-        value={value}
-        onChange={e => onChange(Number(e.target.value))}
-      />
-    );
-  }
+  /* ======================
+     Expression composée
+     ====================== */
+  if (value?.op) {
+    const [left, right] = value.args;
 
-  // bool
-  if (typeof value === "boolean") {
     return (
-      <select
-        value={value ? "true" : "false"}
-        onChange={e => onChange(e.target.value === "true")}
-      >
-        <option value="true">true</option>
-        <option value="false">false</option>
-      </select>
-    );
-  }
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <ExpressionEditor
+          value={left}
+          onChange={l =>
+            onChange({ ...value, args: [l, right] })
+          }
+        />
 
-  // colonne
-  if (value.col) {
-    return (
-      <input
-        placeholder="colonne"
-        value={value.col}
-        onChange={e => onChange({ col: e.target.value })}
-      />
-    );
-  }
-
-  // opération
-  if (value.op) {
-    return (
-      <div>
         <select
           value={value.op}
           onChange={e =>
             onChange({ ...value, op: e.target.value })
           }
         >
-          <option value="+">+</option>
-          <option value="-">-</option>
-          <option value="*">*</option>
-          <option value="/">/</option>
+          {OPS.map(o => (
+            <option key={o} value={o}>{o}</option>
+          ))}
         </select>
 
-        {value.args.map((arg, i) => (
-          <ExpressionEditor
-            key={i}
-            value={arg}
-            onChange={newArg => {
-              const args = [...value.args];
-              args[i] = newArg;
-              onChange({ ...value, args });
-            }}
-          />
-        ))}
-
-        <button
-          onClick={() =>
-            onChange({ ...value, args: [...value.args, 0] })
+        <ExpressionEditor
+          value={right}
+          onChange={r =>
+            onChange({ ...value, args: [left, r] })
           }
-        >
-          +
-        </button>
+        />
+
+        {/* supprimer l'expression */}
+        <button onClick={() => onChange(left)}>✕</button>
+
+        {/* étendre */}
+        <button onClick={wrapWithOp}>+ Expression</button>
       </div>
     );
   }
 
-  // aggregation
-  if (value.agg) {
-    return (
-      <AggregationEditor
-        value={value}
-        onChange={onChange}
-      />
-    );
-  }
-
-  return null;
+  /* ======================
+     Expression atomique
+     ====================== */
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <ValueEditor value={value} onChange={onChange} />
+      <button onClick={wrapWithOp}>+ Expression</button>
+    </div>
+  );
 }
