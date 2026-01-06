@@ -1,4 +1,5 @@
 import AggregationEditor from "./AggregationEditor";
+import ColumnEditor from "./ColumnEditor";
 
 const VALUE_TYPES = [
   { key: "number", label: "Nombre" },
@@ -17,9 +18,6 @@ const COLUMNS = [
 ];
 
 export default function ValueEditor({ value, onChange }) {
-  /* ======================
-     Détecter le type courant
-     ====================== */
   const getType = () => {
     if (value?.agg) return "aggregation";
     if (value?.col) return "column";
@@ -31,9 +29,6 @@ export default function ValueEditor({ value, onChange }) {
 
   const type = getType();
 
-  /* ======================
-     Changer de type
-     ====================== */
   const changeType = t => {
     switch (t) {
       case "number":
@@ -60,9 +55,6 @@ export default function ValueEditor({ value, onChange }) {
     }
   };
 
-  /* ======================
-     Rendu valeur
-     ====================== */
   const renderValue = () => {
     switch (type) {
       case "number":
@@ -97,16 +89,10 @@ export default function ValueEditor({ value, onChange }) {
 
       case "column":
         return (
-          <select
-            value={value.col}
-            onChange={e => onChange({ col: e.target.value })}
-          >
-            {COLUMNS.map(c => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+          <ColumnEditor
+            value={value}
+            onChange={onChange}
+          />
         );
 
       case "aggregation":

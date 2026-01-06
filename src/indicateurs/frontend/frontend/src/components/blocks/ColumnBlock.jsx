@@ -1,7 +1,7 @@
 import Block from "./Block";
 import AggregationEditor from "../editors/AggregationEditor";
 import CaseEditor from "../editors/CaseEditor";
-import ExpressionEditor from "../editors/ExpressionEditor";
+import ColumnEditor from "../editors/ColumnEditor";
 
 export default function ColumnBlock({ value, onChange, onDelete }) {
   function changeType(type) {
@@ -39,7 +39,7 @@ export default function ColumnBlock({ value, onChange, onDelete }) {
       </select>
 
       {value.type === "group_by" && (
-        <ExpressionEditor
+        <ColumnEditor
           value={value.expr}
           onChange={expr => onChange({ ...value, expr })}
         />
