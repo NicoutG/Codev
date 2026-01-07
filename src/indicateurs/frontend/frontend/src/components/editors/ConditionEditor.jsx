@@ -1,123 +1,131 @@
 import ExpressionEditor from "./ExpressionEditor";
 
-const OPS = ["=", "!=", "<", "<=", ">", ">="];
+const COMP_OPS = ["=", "!=", "<", "<=", ">", ">="];
+const LOGICAL_OPS = ["and", "or"];
 
 export default function ConditionEditor({ value, onChange }) {
   /* ======================
+     Créer une condition simple
+     ====================== */
+  const newCondition = () => ({
+    "=": [null, null]
+  });
+
+  /* ======================
      Aucune condition
      ====================== */
-  if (
-    value == null ||
-    (Array.isArray(value) && value.length === 0) ||
-    (typeof value === "object" && Object.keys(value).length === 0)
-  ) {
+  if (!value) {
     return (
-      <button
-        onClick={() =>
-          onChange({
-            "=": [null, null]
-          })
-        }
-      >
+      <button onClick={() => onChange(newCondition())}>
         + Condition
       </button>
     );
   }
 
   /* ======================
-     AND / OR récursif
+     Groupe AND / OR
      ====================== */
   if (value.and || value.or) {
     const key = value.and ? "and" : "or";
     const items = value[key];
 
-    return (
-      <div
-        style={{
-          marginLeft: 12,
-          paddingLeft: 8,
-          borderLeft: "2px solid #ddd"
-        }}
-      >
-        <select
-          value={key}
-          onChange={e =>
-            onChange({ [e.target.value]: items })
-          }
-        >
-          <option value="and">AND</option>
-          <option value="or">OR</option>
-        </select>
+    const updateItem = (i, cond) => {
+      const next = [...items];
+      next[i] = cond;
+      onChange({ [key]: next });
+    };
 
+    const removeItem = i => {
+      const next = items.filter((_, idx) => idx !== i);
+
+      if (next.length === 1) {
+        onChange(next[0]); // déplier
+      } else {
+        onChange({ [key]: next });
+      }
+    };
+
+    const changeLogicalOp = newKey => {
+      onChange({ [newKey]: items });
+    };
+
+    return (
+      <div style={{ marginLeft: 12 }}>
         {items.map((cond, i) => (
-          <ConditionEditor
-            key={i}
-            value={cond}
-            onChange={newCond => {
-              const next = [...items];
-              next[i] = newCond;
-              onChange({ [key]: next });
-            }}
-          />
+          <div key={i}>
+            {/* condition */}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <ConditionEditor
+                value={cond}
+                onChange={c => updateItem(i, c)}
+              />
+              <button onClick={() => removeItem(i)}>✕</button>
+            </div>
+
+            {/* opérateur logique entre lignes */}
+            {i < items.length - 1 && (
+              <select
+                value={key}
+                onChange={e => changeLogicalOp(e.target.value)}
+                style={{ margin: "6px 0" }}
+              >
+                <option value="and">ET</option>
+                <option value="or">OU</option>
+              </select>
+            )}
+          </div>
         ))}
 
         <button
+          style={{ marginTop: 6 }}
           onClick={() =>
-            onChange({
-              [key]: [...items, { "=": [null, null] }]
-            })
+            onChange({ [key]: [...items, newCondition()] })
           }
         >
-          +
+          + Condition
         </button>
       </div>
     );
   }
 
   /* ======================
-     Comparaison simple
+     Condition simple
      ====================== */
   const op = Object.keys(value)[0];
   const [left, right] = value[op];
 
+  const wrapWithLogical = () => {
+    onChange({
+      and: [value, newCondition()]
+    });
+  };
+
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        marginTop: 6
-      }}
-    >
-      {/* Expression gauche */}
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <ExpressionEditor
         value={left}
-        onChange={l =>
-          onChange({ [op]: [l, right] })
-        }
+        onChange={l => onChange({ [op]: [l, right] })}
       />
 
-      {/* Opérateur */}
       <select
         value={op}
         onChange={e =>
           onChange({ [e.target.value]: [left, right] })
         }
       >
-        {OPS.map(o => (
-          <option key={o} value={o}>
-            {o}
-          </option>
+        {COMP_OPS.map(o => (
+          <option key={o} value={o}>{o}</option>
         ))}
       </select>
 
-      {/* Expression droite */}
       <ExpressionEditor
         value={right}
-        onChange={r =>
-          onChange({ [op]: [left, r] })
-        }
+        onChange={r => onChange({ [op]: [left, r] })}
       />
+
+      <button onClick={wrapWithLogical}>
+        + Condition
+      </button>
     </div>
   );
 }
