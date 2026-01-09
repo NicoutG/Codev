@@ -1,53 +1,80 @@
+import React, { useState, useEffect } from "react";
+import { TableProvider } from "../context/TableContext";
 import ConditionEditor from "./ConditionEditor";
-
-const AVAILABLE_TABLES = [
-  "etudiant",
-  "diplome",
-  "diplomes",
-  "inscription"
-];
+import { getTables } from "../../api/metadataApi";
 
 export default function TableSelectionEditor({ value, onChange }) {
   const tables = value?.tables || [];
-  const condition = value?.condition || null;
+  const conditions = value?.conditions ?? null;
+
+  const [availableTables, setAvailableTables] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadTables() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getTables();
+        if (!cancelled) setAvailableTables(data);
+      } catch {
+        if (!cancelled) setError("Impossible de charger les tables");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadTables();
+    return () => { cancelled = true; };
+  }, []);
 
   const toggleTable = table => {
     const nextTables = tables.includes(table)
       ? tables.filter(t => t !== table)
       : [...tables, table];
-
-    onChange({
-      ...value,
-      tables: nextTables
-    });
+    onChange({ ...value, tables: nextTables });
   };
 
   return (
-    <div style={{ border: "1px solid #ccc", padding: 6 }}>
-      <strong>Tables</strong>
+    <TableProvider value={value}>
+      <div style={{ border: "1px solid #ccc", padding: 6 }}>
+        <strong>Tables</strong>
+        {loading && <div>Chargement…</div>}
+        {error && <div style={{ color: "red" }}>{error}</div>}
 
-      <div style={{ display: "flex", flexDirection: "column", marginTop: 4 }}>
-        {AVAILABLE_TABLES.map(t => (
-          <label key={t} style={{ display: "flex", gap: 4 }}>
-            <input
-              type="checkbox"
-              checked={tables.includes(t)}
-              onChange={() => toggleTable(t)}
-            />
-            {t}
-          </label>
-        ))}
+        {!loading && !error && (
+          <div style={{ display: "flex", flexDirection: "column", marginTop: 4 }}>
+            {availableTables.map(t => (
+              <label key={t} style={{ display: "flex", gap: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={tables.includes(t)}
+                  onChange={() => toggleTable(t)}
+                />
+                {t}
+              </label>
+            ))}
+          </div>
+        )}
+
+        <strong style={{ marginTop: 10, display: "block" }}>Conditions</strong>
+        {conditions && (
+          <button
+            style={{ margin: "6px 0" }}
+            onClick={() => onChange({ ...value, conditions: null })}
+          >
+            ✕ Supprimer les conditions
+          </button>
+        )}
+
+        <ConditionEditor
+          value={conditions}
+          onChange={cond => onChange({ ...value, conditions: cond })}
+        />
       </div>
-
-      <ConditionEditor
-        value={condition}
-        onChange={cond =>
-          onChange({
-            ...value,
-            condition: cond
-          })
-        }
-      />
-    </div>
+    </TableProvider>
   );
 }
