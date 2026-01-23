@@ -1,8 +1,9 @@
 from dao.metadata_dao import MetadataDao
+from database import get_db
 
 class MetadataService:
-    def __init__(self):
-        self.dao = MetadataDao()
+    def __init__(self, db):
+        self.dao = MetadataDao(db)
 
     def list_tables(self) -> list[str]:
         return self.dao.get_tables()
