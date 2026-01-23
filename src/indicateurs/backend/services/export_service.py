@@ -38,17 +38,29 @@ class ExportService:
                     ws.cell(row=row_idx, column=col_idx).value = result.get(header)
         
         # Auto-adjust column widths
-        for column in ws.columns:
+        from openpyxl.utils import get_column_letter
+        for col_idx, column in enumerate(ws.columns, start=1):
             max_length = 0
-            column_letter = column[0].column_letter
-            for cell in column:
-                try:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-                except:
-                    pass
-            adjusted_width = min(max_length + 2, 50)
-            ws.column_dimensions[column_letter].width = adjusted_width
+            # Get column letter safely
+            try:
+                column_letter = None
+                for cell in column:
+                    if hasattr(cell, 'column_letter'):
+                        column_letter = cell.column_letter
+                        break
+                if not column_letter:
+                    column_letter = get_column_letter(col_idx)
+                
+                for cell in column:
+                    try:
+                        if cell.value and len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 50)
+                ws.column_dimensions[column_letter].width = adjusted_width
+            except Exception:
+                pass
         
         # Save to BytesIO
         output = BytesIO()
@@ -64,11 +76,12 @@ class ExportService:
         wb.remove(wb.active)
         
         # Create summary sheet
+        from datetime import datetime
         ws_summary = wb.create_sheet("Résumé")
         ws_summary['A1'] = f"Formulaire: {formulaire_data.get('nom', 'N/A')}"
         ws_summary['A1'].font = Font(size=16, bold=True)
         ws_summary['A2'] = f"Demandeur: {formulaire_data.get('demandeur', 'N/A')}"
-        ws_summary['A3'] = f"Date: {formulaire_data.get('date', 'N/A')}"
+        ws_summary['A3'] = f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         
         # Create sheet for each indicator
         indicators = formulaire_data.get('indicators', [])
@@ -86,11 +99,25 @@ class ExportService:
         """Write indicator data to worksheet"""
         title = indicator_data.get('title', 'Indicateur')
         results = indicator_data.get('results', [])
+        chart_type = indicator_data.get('chart_type', 'none')
+        error = indicator_data.get('error')
         
         # Title
         ws['A1'] = title
         ws['A1'].font = Font(size=14, bold=True)
-        ws.merge_cells('A1:D1')
+        
+        # If there's an error, show it
+        if error:
+            ws['A2'] = f"Erreur: {error}"
+            ws['A2'].font = Font(size=12, color="FF0000", bold=True)
+            return
+        
+        # Merge cells for title if we have results
+        if results:
+            num_cols = len(results[0].keys()) if results else 1
+            from openpyxl.utils import get_column_letter
+            end_col = get_column_letter(min(num_cols, 26))
+            ws.merge_cells(f'A1:{end_col}1')
         
         if results:
             # Headers
@@ -107,17 +134,32 @@ class ExportService:
                     ws.cell(row=row_idx, column=col_idx).value = result.get(header)
             
             # Auto-adjust widths
-            for column in ws.columns:
+            for col_idx, column in enumerate(ws.columns, start=1):
                 max_length = 0
-                column_letter = column[0].column_letter
-                for cell in column:
-                    try:
-                        if len(str(cell.value)) > max_length:
-                            max_length = len(str(cell.value))
-                    except:
-                        pass
-                adjusted_width = min(max_length + 2, 50)
-                ws.column_dimensions[column_letter].width = adjusted_width
+                # Get column letter safely
+                try:
+                    # Try to get column letter from first non-merged cell
+                    column_letter = None
+                    for cell in column:
+                        if hasattr(cell, 'column_letter'):
+                            column_letter = cell.column_letter
+                            break
+                    # If still no column_letter, calculate from index
+                    if not column_letter:
+                        from openpyxl.utils import get_column_letter
+                        column_letter = get_column_letter(col_idx)
+                    
+                    for cell in column:
+                        try:
+                            if cell.value and len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 50)
+                    ws.column_dimensions[column_letter].width = adjusted_width
+                except Exception as e:
+                    # Skip if there's an error with this column
+                    pass
     
     def apply_cti_template(self, wb: Workbook):
         """Apply CTI template formatting"""

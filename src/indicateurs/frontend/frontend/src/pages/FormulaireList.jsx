@@ -83,19 +83,6 @@ export default function FormulaireList() {
                 >
                   Voir
                 </button>
-                <button
-                  onClick={() => navigate(`/formulaires/${formulaire.id}/export`)}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#17a2b8",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  Exporter
-                </button>
               </div>
             </div>
           </div>

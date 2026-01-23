@@ -21,3 +21,7 @@ export async function generateFormulaire(id, periode = null, filters = null) {
     body: JSON.stringify({ periode, filters }),
   });
 }
+
+export async function getAvailableParams(id) {
+  return fetchJson(`/api/formulaires/${id}/available-params`);
+}

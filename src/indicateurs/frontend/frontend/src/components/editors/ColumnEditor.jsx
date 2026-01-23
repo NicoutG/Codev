@@ -37,14 +37,42 @@ export default function ColumnEditor({ value, onChange }) {
   }, [tablesToLoad.join(",")]);
 
   return (
-    <select
-      value={value.col || ""}
-      onChange={e => onChange({ ...value, col: e.target.value })}
-    >
-      <option value="" disabled>-- choisir une colonne --</option>
-      {columns.map(c => (
-        <option key={c} value={c}>{c}</option>
-      ))}
-    </select>
+    <div>
+      {columns.length === 0 ? (
+        <div style={{
+          padding: "10px",
+          backgroundColor: "#fff3cd",
+          border: "1px solid #ffc107",
+          borderRadius: "4px",
+          color: "#856404",
+          fontSize: "14px"
+        }}>
+          ⚠️ Aucune colonne disponible. Assurez-vous d'avoir sélectionné une table dans l'étape 1.
+        </div>
+      ) : (
+        <select
+          value={value.col || ""}
+          onChange={e => onChange({ ...value, col: e.target.value })}
+          style={{
+            width: "100%",
+            padding: "8px",
+            border: "1px solid #ddd",
+            borderRadius: "4px",
+            fontSize: "14px",
+            backgroundColor: "white"
+          }}
+        >
+          <option value="" disabled>-- Choisir une colonne depuis votre table --</option>
+          {columns.map(c => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      )}
+      {columns.length > 0 && (
+        <p style={{ fontSize: "12px", color: "#666", marginTop: "5px", marginBottom: 0 }}>
+          {columns.length} colonne{columns.length > 1 ? "s" : ""} disponible{columns.length > 1 ? "s" : ""} depuis les tables sélectionnées
+        </p>
+      )}
+    </div>
   );
 }

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { getIndicators } from "../api/indicatorApi";
 import { getImportHistory } from "../api/importApi";
 import { useAuth } from "../auth/AuthContext";
+import PageHeader from "../components/UI/PageHeader";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const [indicators, setIndicators] = useState([]);
@@ -18,7 +20,7 @@ export default function Dashboard() {
           getImportHistory(),
         ]);
         setIndicators(indicatorsData);
-        setImports(importsData.slice(0, 5)); // Last 5 imports
+        setImports(importsData.slice(0, 5));
       } catch (err) {
         console.error("Error loading dashboard:", err);
       } finally {
@@ -29,109 +31,156 @@ export default function Dashboard() {
   }, []);
 
   if (loading) {
-    return <div style={{ padding: "20px" }}>Chargement...</div>;
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+      </div>
+    );
   }
 
   const predefinedCount = indicators.filter((i) => i.is_predefined).length;
   const customCount = indicators.length - predefinedCount;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Tableau de bord</h1>
-      <p>Bienvenue, {user?.username} ({user?.role})</p>
+    <div className="dashboard">
+      <PageHeader
+        title="Tableau de bord"
+        subtitle={`Bienvenue, ${user?.username} - ${user?.role === "modificateur" ? "Administrateur" : "Consultant"}`}
+      />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "20px", marginTop: "30px" }}>
-        <div style={{
-          backgroundColor: "#e3f2fd",
-          padding: "20px",
-          borderRadius: "8px",
-          border: "1px solid #90caf9"
-        }}>
-          <h3 style={{ margin: "0 0 10px 0" }}>Indicateurs</h3>
-          <p style={{ fontSize: "32px", margin: "0", fontWeight: "bold" }}>{indicators.length}</p>
-          <p style={{ margin: "5px 0 0 0", color: "#666" }}>
-            {predefinedCount} pré-définis, {customCount} personnalisés
-          </p>
-          <Link to="/indicators" style={{ display: "block", marginTop: "10px", color: "#1976d2" }}>
+      <div className="stats-grid">
+        <div className="stat-card stat-card-primary">
+          <div className="stat-icon">📈</div>
+          <div className="stat-content">
+            <div className="stat-value">{indicators.length}</div>
+            <div className="stat-label">Indicateurs</div>
+            <div className="stat-detail">
+              {predefinedCount} pré-définis, {customCount} personnalisés
+            </div>
+          </div>
+          <Link to="/indicators" className="stat-link">
             Voir tous →
           </Link>
         </div>
 
-        <div style={{
-          backgroundColor: "#f3e5f5",
-          padding: "20px",
-          borderRadius: "8px",
-          border: "1px solid #ce93d8"
-        }}>
-          <h3 style={{ margin: "0 0 10px 0" }}>Derniers imports</h3>
-          <p style={{ fontSize: "32px", margin: "0", fontWeight: "bold" }}>{imports.length}</p>
-          <p style={{ margin: "5px 0 0 0", color: "#666" }}>
-            Fichiers importés récemment
-          </p>
+        <div className="stat-card stat-card-success">
+          <div className="stat-icon">💾</div>
+          <div className="stat-content">
+            <div className="stat-value">{imports.length}</div>
+            <div className="stat-label">Derniers imports</div>
+            <div className="stat-detail">Fichiers importés récemment</div>
+          </div>
           {user?.role === "modificateur" && (
-            <Link to="/import" style={{ display: "block", marginTop: "10px", color: "#7b1fa2" }}>
+            <Link to="/import" className="stat-link">
               Importer →
             </Link>
           )}
         </div>
 
-        <div style={{
-          backgroundColor: "#e8f5e9",
-          padding: "20px",
-          borderRadius: "8px",
-          border: "1px solid #a5d6a7"
-        }}>
-          <h3 style={{ margin: "0 0 10px 0" }}>Actions rapides</h3>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-            <Link to="/indicators/new" style={{ color: "#2e7d32" }}>
-              + Créer un indicateur
+        <div className="stat-card stat-card-info">
+          <div className="stat-icon">📋</div>
+          <div className="stat-content">
+            <div className="stat-value">—</div>
+            <div className="stat-label">Formulaires</div>
+            <div className="stat-detail">Rapports disponibles</div>
+          </div>
+          <Link to="/formulaires" className="stat-link">
+            Voir →
+          </Link>
+        </div>
+
+        <div className="stat-card stat-card-warning">
+          <div className="stat-icon">👥</div>
+          <div className="stat-content">
+            <div className="stat-value">—</div>
+            <div className="stat-label">Utilisateurs</div>
+            <div className="stat-detail">Gestion des accès</div>
+          </div>
+          {user?.role === "modificateur" && (
+            <Link to="/users" className="stat-link">
+              Gérer →
             </Link>
+          )}
+        </div>
+      </div>
+
+      <div className="dashboard-actions">
+        <div className="card">
+          <div className="card-header">
+            <h2 className="card-title">Actions rapides</h2>
+          </div>
+          <div className="quick-actions">
             {user?.role === "modificateur" && (
-              <Link to="/import" style={{ color: "#2e7d32" }}>
-                + Importer des données
-              </Link>
+              <>
+                <Link to="/indicators/new" className="quick-action-btn">
+                  <span className="action-icon">➕</span>
+                  <span>Créer un indicateur</span>
+                </Link>
+                <Link to="/import" className="quick-action-btn">
+                  <span className="action-icon">📥</span>
+                  <span>Importer des données</span>
+                </Link>
+                <Link to="/users" className="quick-action-btn">
+                  <span className="action-icon">👥</span>
+                  <span>Gérer les utilisateurs</span>
+                </Link>
+              </>
             )}
-            <Link to="/formulaires" style={{ color: "#2e7d32" }}>
-              Voir les formulaires
+            <Link to="/data" className="quick-action-btn">
+              <span className="action-icon">💾</span>
+              <span>Voir les données</span>
+            </Link>
+            <Link to="/formulaires" className="quick-action-btn">
+              <span className="action-icon">📋</span>
+              <span>Voir les formulaires</span>
+            </Link>
+            <Link to="/change-password" className="quick-action-btn">
+              <span className="action-icon">🔒</span>
+              <span>Changer mon mot de passe</span>
             </Link>
           </div>
         </div>
       </div>
 
       {imports.length > 0 && (
-        <div style={{ marginTop: "40px" }}>
-          <h2>Derniers imports</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
-            <thead>
-              <tr style={{ backgroundColor: "#f5f5f5" }}>
-                <th style={{ padding: "10px", textAlign: "left", border: "1px solid #ddd" }}>Fichier</th>
-                <th style={{ padding: "10px", textAlign: "left", border: "1px solid #ddd" }}>Type</th>
-                <th style={{ padding: "10px", textAlign: "left", border: "1px solid #ddd" }}>Date</th>
-                <th style={{ padding: "10px", textAlign: "left", border: "1px solid #ddd" }}>Statut</th>
-              </tr>
-            </thead>
-            <tbody>
-              {imports.map((imp) => (
-                <tr key={imp.id}>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{imp.fichier_nom}</td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>{imp.type_donnee}</td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                    {new Date(imp.date_import).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                    <span style={{
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      backgroundColor: imp.statut === "success" ? "#c8e6c9" : "#ffcdd2",
-                      color: imp.statut === "success" ? "#2e7d32" : "#c62828"
-                    }}>
-                      {imp.statut}
-                    </span>
-                  </td>
+        <div className="recent-imports">
+          <div className="card">
+            <div className="card-header">
+              <h2 className="card-title">Derniers imports</h2>
+            </div>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Fichier</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Statut</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {imports.map((imp) => (
+                  <tr key={imp.id}>
+                    <td>{imp.fichier_nom}</td>
+                    <td>
+                      <span className="badge badge-info">{imp.type_donnee}</span>
+                    </td>
+                    <td>{new Date(imp.date_import).toLocaleDateString()}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          imp.statut === "success"
+                            ? "badge-success"
+                            : "badge-danger"
+                        }`}
+                      >
+                        {imp.statut}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

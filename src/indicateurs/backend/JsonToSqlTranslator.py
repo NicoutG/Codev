@@ -61,7 +61,9 @@ class JsonToSqlTranslator:
         if isinstance(expr, bool):
             return "1" if expr else "0"
         if isinstance(expr, str):
-            return f"'{expr}'"
+            # Escape single quotes by doubling them for SQL
+            escaped = expr.replace("'", "''")
+            return f"'{escaped}'"
         if isinstance(expr, dict) and "col" in expr:
             return expr["col"]
         raise ValueError(f"Expression inconnue : {expr}")
@@ -110,7 +112,9 @@ class JsonToSqlTranslator:
         parts = ["CASE"]
         for c in col["cases"]:
             when = self._condition(c["when"])
-            then = f"'{c['label']}'"
+            # Escape single quotes by doubling them for SQL
+            escaped_label = c['label'].replace("'", "''")
+            then = f"'{escaped_label}'"
             parts.append(f"  WHEN {when} THEN {then}")
         parts.append("END")
         return " ".join(parts)

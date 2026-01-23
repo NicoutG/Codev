@@ -86,6 +86,7 @@ class FormulaireIndicator(Base):
     formulaire_id = Column(Integer, ForeignKey("formulaires.id"), nullable=False)
     indicator_id = Column(Integer, ForeignKey("indicators.id"), nullable=False)
     ordre = Column(Integer, nullable=False)
+    chart_type = Column(String)  # "pie", "bar", "line", "none"
     
     # Relationships
     formulaire = relationship("Formulaire", back_populates="formulaire_indicators")

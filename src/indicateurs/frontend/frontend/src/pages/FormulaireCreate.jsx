@@ -8,6 +8,7 @@ export default function FormulaireCreate() {
   const [demandeur, setDemandeur] = useState("CTI");
   const [templateType, setTemplateType] = useState("CTI");
   const [indicators, setIndicators] = useState([]);
+  const [chartTypes, setChartTypes] = useState({}); // {indicator_id: chart_type}
   const [availableIndicators, setAvailableIndicators] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -28,9 +29,17 @@ export default function FormulaireCreate() {
   function toggleIndicator(id) {
     if (indicators.includes(id)) {
       setIndicators(indicators.filter((i) => i !== id));
+      const newChartTypes = { ...chartTypes };
+      delete newChartTypes[id];
+      setChartTypes(newChartTypes);
     } else {
       setIndicators([...indicators, id]);
+      setChartTypes({ ...chartTypes, [id]: "none" });
     }
+  }
+
+  function setChartType(indicatorId, chartType) {
+    setChartTypes({ ...chartTypes, [indicatorId]: chartType });
   }
 
   async function handleSubmit(e) {
@@ -46,7 +55,8 @@ export default function FormulaireCreate() {
         nom,
         demandeur,
         template_type: templateType,
-        indicator_ids: indicators
+        indicator_ids: indicators,
+        chart_types: chartTypes
       });
       navigate("/formulaires");
     } catch (err) {
@@ -131,40 +141,69 @@ export default function FormulaireCreate() {
             overflowY: "auto"
           }}>
             {availableIndicators.map((indicator) => (
-              <label
+              <div
                 key={indicator.id}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
                   padding: "10px",
-                  cursor: "pointer",
                   backgroundColor: indicators.includes(indicator.id) ? "#e3f2fd" : "transparent",
                   borderRadius: "4px",
-                  marginBottom: "5px"
+                  marginBottom: "10px",
+                  border: "1px solid #ddd"
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={indicators.includes(indicator.id)}
-                  onChange={() => toggleIndicator(indicator.id)}
-                  style={{ marginRight: "10px" }}
-                />
-                <div>
-                  <div style={{ fontWeight: "bold" }}>{indicator.title}</div>
-                  {indicator.description && (
-                    <div style={{ fontSize: "14px", color: "#666" }}>{indicator.description}</div>
-                  )}
-                  {indicator.is_predefined && (
-                    <span style={{
-                      fontSize: "12px",
-                      color: "#ff9800",
-                      marginLeft: "10px"
-                    }}>
-                      Pré-défini
-                    </span>
-                  )}
-                </div>
-              </label>
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    cursor: "pointer",
+                    marginBottom: indicators.includes(indicator.id) ? "10px" : "0"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={indicators.includes(indicator.id)}
+                    onChange={() => toggleIndicator(indicator.id)}
+                    style={{ marginRight: "10px" }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: "bold" }}>{indicator.title}</div>
+                    {indicator.description && (
+                      <div style={{ fontSize: "14px", color: "#666" }}>{indicator.description}</div>
+                    )}
+                    {indicator.is_predefined && (
+                      <span style={{
+                        fontSize: "12px",
+                        color: "#ff9800",
+                        marginLeft: "10px"
+                      }}>
+                        Pré-défini
+                      </span>
+                    )}
+                  </div>
+                </label>
+                {indicators.includes(indicator.id) && (
+                  <div style={{ marginTop: "10px", marginLeft: "30px" }}>
+                    <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold", fontSize: "14px" }}>
+                      Type de graphique :
+                    </label>
+                    <select
+                      value={chartTypes[indicator.id] || "none"}
+                      onChange={(e) => setChartType(indicator.id, e.target.value)}
+                      style={{
+                        padding: "6px",
+                        border: "1px solid #ddd",
+                        borderRadius: "4px",
+                        fontSize: "14px"
+                      }}
+                    >
+                      <option value="none">Aucun graphique</option>
+                      <option value="pie">Camembert</option>
+                      <option value="bar">Histogramme</option>
+                      <option value="line">Courbe</option>
+                    </select>
+                  </div>
+                )}
+              </div>
             ))}
           </div>
           {indicators.length > 0 && (

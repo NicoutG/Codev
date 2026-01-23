@@ -89,6 +89,10 @@ done
 print_info "Initializing database..."
 docker exec polytech_backend python init_db.py || print_warn "Database initialization might have failed, but continuing..."
 
+# Import sample data
+print_info "Importing sample data from examples folder..."
+docker exec polytech_backend python init_sample_data.py || print_warn "Sample data import might have failed, but continuing..."
+
 # Show status
 print_info "Checking service status..."
 $DOCKER_COMPOSE ps

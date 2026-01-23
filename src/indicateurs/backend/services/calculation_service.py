@@ -39,66 +39,217 @@ class CalculationService:
                            periode: Optional[str] = None,
                            filters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """Calculate indicator from specification"""
+        # Extract year from filters if present
+        year = filters.get("annee") if filters else None
+        
         # Create translator
         translator = JsonToSqlTranslator(spec_json)
         
         # Generate base SQL
         sql = translator.to_sql()
         
-        # Apply filters
-        if filters:
-            sql = self._apply_filters(sql, filters)
+        # Resolve logical table names to actual table names (with period and year filters)
+        sql = self._resolve_table_names(sql, spec_json, periode, year)
         
-        # Apply period filter
-        if periode:
-            sql = self._apply_period_filter(sql, periode)
+        # Extract the actual table name from SQL
+        import re
+        table_match = re.search(r'FROM\s+"([^"]+)"', sql, re.IGNORECASE)
+        actual_table = table_match.group(1) if table_match else None
+        
+        # Replace logical column names with actual column names from the table
+        if actual_table:
+            sql = self._resolve_column_names(sql, actual_table)
+        
+        # Apply filters (year, etc.) - but skip year if we already filtered by table selection
+        if filters:
+            # Don't apply year filter if we already selected table by year
+            filters_to_apply = {k: v for k, v in filters.items() if k != "annee" or not year}
+            if filters_to_apply:
+                sql = self._apply_filters(sql, filters_to_apply, actual_table)
         
         # Execute
         results = self.execute_sql(sql)
         return results
     
-    def _apply_filters(self, sql: str, filters: Dict[str, Any]) -> str:
-        """Apply custom filters to SQL"""
-        # This is a simplified version
-        # In production, you'd use a proper SQL parser
+    def _resolve_table_names(self, sql: str, spec_json: Dict[str, Any], periode: Optional[str] = None, year: Optional[int] = None) -> str:
+        """Resolve logical table names (e.g., 'insertion_diplomes') to actual table names (e.g., 'data_insertion_*')"""
+        # Get logical table names from spec
+        logical_tables = spec_json.get("sujet", {}).get("tables", [])
         
-        where_clauses = []
+        if not logical_tables:
+            return sql
         
-        if "annee" in filters:
-            # Find WHERE clause and add year filter
-            # This is simplified - in production use proper SQL parsing
-            year = filters["annee"]
-            if "WHERE" in sql.upper():
-                sql = sql.replace("WHERE", f"WHERE annee = {year} AND", 1)
+        # Mapping of logical names to data types
+        table_type_mapping = {
+            "insertion_diplomes": ["insertion", "insertion_2020_6m", "insertion_2020_18m", "insertion_2021_6m", "insertion_2021_18m", "insertion_2022_6m"],
+            "mobilite_diplomes": "mobilite",
+            "reussite_etudiants": "reussite"
+        }
+        
+        # Get actual tables from database
+        from models import Import
+        imports = self.db.query(Import).filter(Import.statut == "success").all()
+        
+        # Build mapping: logical_name -> actual_table_name
+        table_mapping = {}
+        missing_tables = []
+        
+        for logical_name in logical_tables:
+            data_types = table_type_mapping.get(logical_name)
+            if not data_types:
+                # If no mapping, try to find by name pattern
+                data_types = logical_name.split("_")[0] if "_" in logical_name else logical_name
+            
+            # Handle both single string and list of strings
+            if isinstance(data_types, str):
+                data_types = [data_types]
+            
+            # Find the most recent table of any of these types
+            # Handle both exact matches and prefix matches (e.g., "insertion" matches "insertion_2020_6m")
+            matching_imports = []
+            for imp in imports:
+                # Check exact match
+                if imp.type_donnee in data_types:
+                    matching_imports.append(imp)
+                else:
+                    # Check if any data_type is a prefix of the import type
+                    for dt in data_types:
+                        if imp.type_donnee.startswith(dt + "_") or imp.type_donnee == dt:
+                            matching_imports.append(imp)
+                            break
+            
+            # Filter by period if specified
+            if periode and matching_imports:
+                period_suffix = "_6m" if periode == "6_mois" else "_18m" if periode == "18_mois" else None
+                if period_suffix:
+                    # Filter imports to only those matching the period
+                    matching_imports = [imp for imp in matching_imports if period_suffix in imp.type_donnee]
+            
+            # Filter by year if specified
+            if year and matching_imports:
+                # Filter imports to only those matching the year (e.g., insertion_2022_6m)
+                year_str = str(year)
+                matching_imports = [imp for imp in matching_imports if year_str in imp.type_donnee]
+            
+            if matching_imports:
+                # Sort by date, get most recent
+                most_recent = max(matching_imports, key=lambda x: x.date_import)
+                actual_table = most_recent.metadata_json.get("table_name")
+                if actual_table:
+                    table_mapping[logical_name] = actual_table
             else:
-                # Add WHERE clause
-                sql = sql.rstrip(";")
-                sql += f" WHERE annee = {year};"
+                missing_tables.append((logical_name, str(data_types)))
         
-        if "semestre" in filters:
-            semestre = filters["semestre"]
-            if "WHERE" in sql.upper():
-                sql = sql.replace("WHERE", f"WHERE semestre = '{semestre}' AND", 1)
-            else:
-                sql = sql.rstrip(";")
-                sql += f" WHERE semestre = '{semestre}';"
+        # If tables are missing, raise a helpful error
+        if missing_tables:
+            available_types = set(imp.type_donnee for imp in imports)
+            missing_info = ", ".join([f"{logical} (type: {data_type})" for logical, data_type in missing_tables])
+            available_info = ", ".join(available_types) if available_types else "aucune"
+            raise ValueError(
+                f"Tables manquantes pour les indicateurs: {missing_info}. "
+                f"Types de données disponibles: {available_info}. "
+                f"Veuillez importer les données nécessaires via la page d'import."
+            )
+        
+        # Replace logical names with actual names in SQL
+        for logical_name, actual_name in table_mapping.items():
+            # Replace table name in SQL (handle quoted and unquoted)
+            sql = sql.replace(f"FROM {logical_name}", f"FROM \"{actual_name}\"")
+            sql = sql.replace(f"FROM \"{logical_name}\"", f"FROM \"{actual_name}\"")
+            sql = sql.replace(f"JOIN {logical_name}", f"JOIN \"{actual_name}\"")
+            sql = sql.replace(f"JOIN \"{logical_name}\"", f"JOIN \"{actual_name}\"")
+            # Also replace in subqueries
+            sql = sql.replace(f"FROM {logical_name} ", f"FROM \"{actual_name}\" ")
+            sql = sql.replace(f"FROM \"{logical_name}\" ", f"FROM \"{actual_name}\" ")
         
         return sql
     
-    def _apply_period_filter(self, sql: str, periode: str) -> str:
-        """Apply period filter (6 months, 18 months)"""
-        # This would filter based on date columns
-        # Simplified version - in production, parse SQL properly
+    def _resolve_column_names(self, sql: str, table_name: str) -> str:
+        """Resolve logical column names to actual column names in the table"""
+        import re
         
-        if periode == "6_mois":
-            # Filter for 6 months after graduation
-            # This depends on your data structure
-            pass
-        elif periode == "18_mois":
-            # Filter for 18 months after graduation
-            pass
+        # Get actual columns from the table
+        inspector = inspect(self.engine)
+        try:
+            columns = [col['name'] for col in inspector.get_columns(table_name)]
+        except Exception:
+            # If table doesn't exist or error, return sql as-is
+            return sql
+        
+        # Define column patterns that need to be resolved
+        # Each entry: (regex_pattern, search_prefix, priority_keywords)
+        # priority_keywords helps choose the right column if multiple matches
+        column_patterns = [
+            (r"quelle_est_votre_situation_au_1er_mars_\d{4}___", "quelle_est_votre_situation_au_1er_mars_", []),
+            (r"quel_type_d_études_poursuivez_vous___", "quel_type_d_études_poursuivez_vous_", []),
+            (r"combien_de_temps_avez_vous_mis_pour_trouver_\w+", "combien_de_temps_avez_vous_mis_pour_trouver_", ["1er", "votre"]),
+        ]
+        
+        # For each pattern, find and replace
+        for pattern_regex, search_prefix, priority_keywords in column_patterns:
+            # Find all occurrences of this pattern in SQL
+            matches = re.findall(pattern_regex, sql)
+            if matches:
+                # Find actual columns that match the prefix
+                matching_cols = [c for c in columns if c.startswith(search_prefix)]
+                
+                if matching_cols:
+                    # If priority keywords, prefer columns with those
+                    if priority_keywords:
+                        priority_cols = [c for c in matching_cols if any(kw in c for kw in priority_keywords)]
+                        actual_col = priority_cols[0] if priority_cols else matching_cols[0]
+                    else:
+                        actual_col = matching_cols[0]
+                    
+                    # Replace all variations with the actual column
+                    for match in set(matches):  # Use set to avoid duplicates
+                        sql = sql.replace(match, actual_col)
         
         return sql
+    
+    def _apply_filters(self, sql: str, filters: Dict[str, Any], table_name: Optional[str] = None) -> str:
+        """Apply custom filters to SQL"""
+        import re
+        
+        if "annee" in filters and table_name:
+            year = filters["annee"]
+            
+            # Check which column exists: 'annee' or 'promotion'
+            columns = self.get_table_columns(table_name)
+            year_col = None
+            
+            if "annee" in columns:
+                year_col = "annee"
+            elif "promotion" in columns:
+                year_col = "promotion"
+            
+            if year_col:
+                # Build WHERE clause
+                where_clause = f"{year_col} = {year}"
+                
+                if "WHERE" in sql.upper():
+                    # Add to existing WHERE clause
+                    sql = re.sub(r"WHERE\s+", f"WHERE {where_clause} AND ", sql, flags=re.IGNORECASE)
+                else:
+                    # Add new WHERE clause
+                    sql = sql.rstrip(";")
+                    sql += f" WHERE {where_clause};"
+        
+        if "semestre" in filters and table_name:
+            semestre = filters["semestre"]
+            columns = self.get_table_columns(table_name)
+            
+            if "semestre" in columns:
+                where_clause = f"semestre = '{semestre}'"
+                
+                if "WHERE" in sql.upper():
+                    sql = re.sub(r"WHERE\s+", f"WHERE {where_clause} AND ", sql, flags=re.IGNORECASE)
+                else:
+                    sql = sql.rstrip(";")
+                    sql += f" WHERE {where_clause};"
+        
+        return sql
+    
     
     def get_available_tables(self) -> List[str]:
         """Get list of available data tables"""

@@ -15,7 +15,8 @@ class FormulaireDao:
         return self.db.query(Formulaire).filter(Formulaire.id == formulaire_id).first()
     
     def create(self, nom: str, demandeur: str, template_type: str, 
-               created_by_id: int, indicator_ids: List[int]) -> Formulaire:
+               created_by_id: int, indicator_ids: List[int], 
+               chart_types: Optional[Dict[int, str]] = None) -> Formulaire:
         """Create a new formulaire"""
         formulaire = Formulaire(
             nom=nom,
@@ -31,7 +32,8 @@ class FormulaireDao:
             fi = FormulaireIndicator(
                 formulaire_id=formulaire.id,
                 indicator_id=indicator_id,
-                ordre=idx
+                ordre=idx,
+                chart_type=chart_types.get(indicator_id, "none") if chart_types else "none"
             )
             self.db.add(fi)
         
@@ -53,6 +55,7 @@ class FormulaireDao:
         
         # Update indicators if provided
         if indicator_ids is not None:
+            chart_types = kwargs.pop('chart_types', None)
             # Delete existing
             self.db.query(FormulaireIndicator).filter(
                 FormulaireIndicator.formulaire_id == formulaire_id
@@ -63,7 +66,8 @@ class FormulaireDao:
                 fi = FormulaireIndicator(
                     formulaire_id=formulaire_id,
                     indicator_id=indicator_id,
-                    ordre=idx
+                    ordre=idx,
+                    chart_type=chart_types.get(indicator_id, "none") if chart_types else "none"
                 )
                 self.db.add(fi)
         

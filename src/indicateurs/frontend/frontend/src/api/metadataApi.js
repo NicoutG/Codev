@@ -1,3 +1,5 @@
+import { fetchJson } from "./authApi";
+
 // =======================
 // Cache mémoire (module)
 // =======================
@@ -10,29 +12,6 @@ const columnsByTablePromise = new Map();
 
 const columnsForTablesCache = new Map();
 const columnsForTablesPromise = new Map();
-
-// =======================
-// Helpers
-// =======================
-
-async function fetchJson(url, options) {
-  const res = await fetch(url, options);
-  const contentType = res.headers.get("content-type");
-
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `HTTP ${res.status}`);
-  }
-
-  if (!contentType?.includes("application/json")) {
-    const text = await res.text();
-    throw new Error(
-      `Réponse non JSON reçue : ${text.substring(0, 100)}`
-    );
-  }
-
-  return res.json();
-}
 
 // =======================
 // API publiques
@@ -49,8 +28,15 @@ export async function getTables() {
 
   tablesPromise = fetchJson("/api/metadata/tables")
     .then(data => {
-      tablesCache = data;
-      return data;
+      // Handle both old format (array of strings) and new format (array of objects)
+      if (data && data.length > 0 && typeof data[0] === 'string') {
+        // Old format: convert to new format
+        tablesCache = data.map(name => ({ name, row_count: 0, columns: [] }));
+      } else {
+        // New format: already objects
+        tablesCache = data;
+      }
+      return tablesCache;
     })
     .finally(() => {
       tablesPromise = null;

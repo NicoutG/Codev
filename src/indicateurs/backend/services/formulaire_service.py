@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from dao.formulaire_dao import FormulaireDao
 from services.indicator_service import IndicatorService
 from services.calculation_service import CalculationService
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 class FormulaireService:
     def __init__(self, db: Session):
@@ -20,9 +20,10 @@ class FormulaireService:
         return self.dao.get_by_id(formulaire_id)
     
     def create_formulaire(self, nom: str, demandeur: str, template_type: str,
-                         created_by_id: int, indicator_ids: List[int]):
+                         created_by_id: int, indicator_ids: List[int], 
+                         chart_types: Optional[Dict[int, str]] = None):
         """Create a new formulaire"""
-        return self.dao.create(nom, demandeur, template_type, created_by_id, indicator_ids)
+        return self.dao.create(nom, demandeur, template_type, created_by_id, indicator_ids, chart_types)
     
     def update_formulaire(self, formulaire_id: int, **kwargs):
         """Update a formulaire"""
@@ -59,11 +60,16 @@ class FormulaireService:
                     filters=filters
                 )
                 
+                # Get chart type for this indicator
+                fi = next((fi for fi in formulaire.formulaire_indicators if fi.indicator_id == indicator.id), None)
+                chart_type = fi.chart_type if fi else "none"
+                
                 formulaire_data["indicators"].append({
                     "id": indicator.id,
                     "title": indicator.title,
                     "description": indicator.description,
-                    "results": results
+                    "results": results,
+                    "chart_type": chart_type
                 })
             except Exception as e:
                 # Add error indicator

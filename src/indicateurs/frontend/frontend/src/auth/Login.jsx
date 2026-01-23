@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/authApi";
 import { useAuth } from "./AuthContext";
+import "../styles/theme.css";
+import "./Login.css";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -28,92 +30,75 @@ export default function Login() {
   }
 
   return (
-    <div style={{ 
-      display: "flex", 
-      justifyContent: "center", 
-      alignItems: "center", 
-      minHeight: "100vh",
-      backgroundColor: "#f5f5f5"
-    }}>
-      <div style={{
-        backgroundColor: "white",
-        padding: "40px",
-        borderRadius: "8px",
-        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-        width: "100%",
-        maxWidth: "400px"
-      }}>
-        <h1 style={{ textAlign: "center", marginBottom: "30px" }}>Connexion</h1>
-        
-        {error && (
-          <div style={{
-            backgroundColor: "#fee",
-            color: "#c33",
-            padding: "10px",
-            borderRadius: "4px",
-            marginBottom: "20px"
-          }}>
-            {error}
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-header">
+          <div className="login-logo">
+            <div className="login-logo-icon">📊</div>
+            <div className="login-logo-text">
+              <h1>PolyStats</h1>
+              <p>Gestion des indicateurs Polytech Lyon</p>
+            </div>
           </div>
-        )}
-        
-        <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-              Nom d'utilisateur
-            </label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontSize: "16px"
-              }}
-            />
-          </div>
-          
-          <div style={{ marginBottom: "20px" }}>
-            <label style={{ display: "block", marginBottom: "5px", fontWeight: "bold" }}>
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              style={{
-                width: "100%",
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                fontSize: "16px"
-              }}
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              width: "100%",
-              padding: "12px",
-              backgroundColor: "#007bff",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              fontSize: "16px",
-              cursor: loading ? "not-allowed" : "pointer",
-              opacity: loading ? 0.6 : 1
-            }}
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
-        </form>
+        </div>
+
+        <div className="login-card">
+          <h2 className="login-title">Connexion</h2>
+          <p className="login-subtitle">Connectez-vous pour accéder à votre espace</p>
+
+          {error && (
+            <div className="alert alert-danger">{error}</div>
+          )}
+
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-group">
+              <label className="form-label">Nom d'utilisateur</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                className="form-control"
+                placeholder="Entrez votre nom d'utilisateur"
+                autoFocus
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Mot de passe</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="form-control"
+                placeholder="Entrez votre mot de passe"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary btn-lg login-submit"
+            >
+              {loading ? (
+                <>
+                  <div className="spinner" style={{ width: "20px", height: "20px", borderWidth: "2px" }}></div>
+                  Connexion...
+                </>
+              ) : (
+                <>
+                  <span>🔐</span>
+                  Se connecter
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <div className="login-footer">
+          <p>© 2025 Polytech Lyon - Tous droits réservés</p>
+        </div>
       </div>
     </div>
   );
