@@ -1,16 +1,48 @@
-# React + Vite
+# Frontend - Polytech Stats
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Installation
 
-Currently, two official plugins are available:
+```bash
+cd src/indicateurs/frontend/frontend
+npm install
+```
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Lancer en développement
 
-## React Compiler
+```bash
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+L'application sera accessible sur `http://localhost:5173`
 
-## Expanding the ESLint configuration
+## Build pour production
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run build
+```
+
+Les fichiers seront générés dans le dossier `dist/`
+
+## Structure
+
+- `src/api/` : APIs pour communiquer avec le backend
+- `src/auth/` : Authentification (Login, AuthContext)
+- `src/pages/` : Pages principales
+- `src/components/` : Composants réutilisables
+
+## Pages
+
+- `/login` : Connexion
+- `/dashboard` : Tableau de bord
+- `/indicators` : Liste des indicateurs
+- `/indicators/new` : Créer un indicateur
+- `/indicators/:id/edit` : Éditer un indicateur
+- `/indicators/:id/results` : Résultats avec graphiques
+- `/import` : Importer des données Excel (modificateur uniquement)
+- `/formulaires` : Liste des formulaires
+- `/formulaires/new` : Créer un formulaire
+
+## Comptes par défaut
+
+- **Admin/Modificateur** : `admin` / `admin123`
+- **Consultant** : `consultant` / `consultant123`
