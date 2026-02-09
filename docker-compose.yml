@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: polytech_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: polytech_indicateurs
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - polytech_network
+
+  backend:
+    build:
+      context: ./src/backend
+      dockerfile: Dockerfile
+    container_name: polytech_backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/polytech_indicateurs
+      SECRET_KEY: your-secret-key-change-in-production-minimum-32-characters
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      CORS_ORIGINS: 'http://localhost:5173,http://localhost:3000,http://localhost:80'
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src/backend/uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "
+        python init_db.py || true &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    networks:
+      - polytech_network
+
+  frontend:
+    build:
+      context: ./src/frontend
+      dockerfile: Dockerfile
+    container_name: polytech_frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - polytech_network
+
+volumes:
+  postgres_data:
+
+networks:
+  polytech_network:
+    driver: bridge
