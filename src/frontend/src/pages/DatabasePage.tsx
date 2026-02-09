@@ -5,25 +5,31 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { metadataApi } from '../api/metadata';
 import { importsApi, ImportResponse } from '../api/imports';
 import { exportsApi } from '../api/exports';
-
-interface TableData {
-  [key: string]: any;
-}
+import { dataApi, TableDataRow, TableDataResponse } from '../api/data';
 
 const DatabasePageContent: React.FC = () => {
   const { isEditeur } = useAuth();
   const [tables, setTables] = useState<string[]>([]);
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
-  const [tableData, setTableData] = useState<TableData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'columns' | 'data'>('columns');
+  
+  // États pour les données
+  const [tableData, setTableData] = useState<TableDataResponse | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage] = useState(50);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  // États pour import/export
+  const [isLoadingImportExport, setIsLoadingImportExport] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [importProgress, setImportProgress] = useState<ImportResponse | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage] = useState(50);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadTables();
@@ -32,8 +38,17 @@ const DatabasePageContent: React.FC = () => {
   useEffect(() => {
     if (selectedTable) {
       loadTableColumns(selectedTable);
+      if (activeTab === 'data') {
+        loadTableData();
+      }
     }
-  }, [selectedTable]);
+  }, [selectedTable, activeTab]);
+
+  useEffect(() => {
+    if (selectedTable && activeTab === 'data') {
+      loadTableData();
+    }
+  }, [currentPage, searchTerm, sortColumn, sortOrder]);
 
   const loadTables = async () => {
     try {
@@ -61,25 +76,46 @@ const DatabasePageContent: React.FC = () => {
     }
   };
 
+  const loadTableData = async () => {
+    if (!selectedTable) return;
+    
+    try {
+      setIsLoadingData(true);
+      setError('');
+      const skip = (currentPage - 1) * rowsPerPage;
+      const data = await dataApi.getTableData(selectedTable, {
+        skip,
+        limit: rowsPerPage,
+        search: searchTerm || undefined,
+        sort_by: sortColumn || undefined,
+        sort_order: sortOrder
+      });
+      setTableData(data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Erreur lors du chargement des données');
+    } finally {
+      setIsLoadingData(false);
+    }
+  };
+
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !selectedTable) return;
 
     try {
-      setIsLoadingData(true);
+      setIsLoadingImportExport(true);
       setError('');
       setSuccess('');
       const result = await importsApi.importCsv(selectedTable, file);
       setImportProgress(result);
       setSuccess(`Import réussi : ${result.upserted_rows} lignes importées sur ${result.processed_rows} traitées`);
-      // Recharger les données si on les affiche
-      if (tableData.length > 0) {
-        // Optionnel : recharger les données
+      if (activeTab === 'data') {
+        loadTableData();
       }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de l\'import du fichier CSV');
     } finally {
-      setIsLoadingData(false);
+      setIsLoadingImportExport(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -90,7 +126,7 @@ const DatabasePageContent: React.FC = () => {
     if (!selectedTable) return;
 
     try {
-      setIsLoadingData(true);
+      setIsLoadingImportExport(true);
       setError('');
       setSuccess('');
       await exportsApi.downloadCsv(selectedTable, ';', true);
@@ -98,8 +134,23 @@ const DatabasePageContent: React.FC = () => {
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de l\'export du fichier CSV');
     } finally {
-      setIsLoadingData(false);
+      setIsLoadingImportExport(false);
     }
+  };
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortOrder('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
   };
 
   const getTableDisplayName = (table: string) => {
@@ -119,6 +170,14 @@ const DatabasePageContent: React.FC = () => {
     };
     return descriptions[table] || '';
   };
+
+  const formatCellValue = (value: any): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'Oui' : 'Non';
+    return String(value);
+  };
+
+  const totalPages = tableData ? Math.ceil(tableData.total / rowsPerPage) : 0;
 
   if (isLoading) {
     return (
@@ -232,15 +291,14 @@ const DatabasePageContent: React.FC = () => {
             top: '90px'
           }}>
             <h2 style={{
-              fontSize: '0.9375rem',
+              fontSize: '0.75rem',
               fontWeight: '600',
               color: '#1e293b',
               marginBottom: '1rem',
               paddingBottom: '0.75rem',
               borderBottom: '2px solid #e2e8f0',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
-              fontSize: '0.75rem'
+              letterSpacing: '0.05em'
             }}>
               Tables ({tables.length})
             </h2>
@@ -253,6 +311,10 @@ const DatabasePageContent: React.FC = () => {
                     setImportProgress(null);
                     setSuccess('');
                     setError('');
+                    setSearchTerm('');
+                    setSortColumn(null);
+                    setSortOrder('asc');
+                    setCurrentPage(1);
                   }}
                   style={{
                     padding: '0.875rem 1rem',
@@ -349,31 +411,31 @@ const DatabasePageContent: React.FC = () => {
                       <>
                         <button
                           onClick={() => fileInputRef.current?.click()}
-                          disabled={isLoadingData}
+                          disabled={isLoadingImportExport}
                           style={{
                             padding: '0.75rem 1.5rem',
-                            backgroundColor: isLoadingData ? '#94a3b8' : '#10b981',
+                            backgroundColor: isLoadingImportExport ? '#94a3b8' : '#10b981',
                             color: 'white',
                             border: 'none',
                             borderRadius: '8px',
                             fontSize: '0.875rem',
                             fontWeight: '600',
-                            cursor: isLoadingData ? 'not-allowed' : 'pointer',
+                            cursor: isLoadingImportExport ? 'not-allowed' : 'pointer',
                             transition: 'all 0.2s ease',
-                            boxShadow: isLoadingData ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
+                            boxShadow: isLoadingImportExport ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.5rem'
                           }}
                           onMouseEnter={(e) => {
-                            if (!isLoadingData) {
+                            if (!isLoadingImportExport) {
                               e.currentTarget.style.backgroundColor = '#059669';
                               e.currentTarget.style.transform = 'translateY(-1px)';
                               e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
                             }
                           }}
                           onMouseLeave={(e) => {
-                            if (!isLoadingData) {
+                            if (!isLoadingImportExport) {
                               e.currentTarget.style.backgroundColor = '#10b981';
                               e.currentTarget.style.transform = 'translateY(0)';
                               e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
@@ -394,31 +456,31 @@ const DatabasePageContent: React.FC = () => {
                     )}
                     <button
                       onClick={handleExport}
-                      disabled={isLoadingData}
+                      disabled={isLoadingImportExport}
                       style={{
                         padding: '0.75rem 1.5rem',
-                        backgroundColor: isLoadingData ? '#94a3b8' : '#1e40af',
+                        backgroundColor: isLoadingImportExport ? '#94a3b8' : '#1e40af',
                         color: 'white',
                         border: 'none',
                         borderRadius: '8px',
                         fontSize: '0.875rem',
                         fontWeight: '600',
-                        cursor: isLoadingData ? 'not-allowed' : 'pointer',
+                        cursor: isLoadingImportExport ? 'not-allowed' : 'pointer',
                         transition: 'all 0.2s ease',
-                        boxShadow: isLoadingData ? 'none' : '0 4px 12px rgba(30, 64, 175, 0.3)',
+                        boxShadow: isLoadingImportExport ? 'none' : '0 4px 12px rgba(30, 64, 175, 0.3)',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.5rem'
                       }}
                       onMouseEnter={(e) => {
-                        if (!isLoadingData) {
+                        if (!isLoadingImportExport) {
                           e.currentTarget.style.backgroundColor = '#1e3a8a';
                           e.currentTarget.style.transform = 'translateY(-1px)';
                           e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.4)';
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (!isLoadingData) {
+                        if (!isLoadingImportExport) {
                           e.currentTarget.style.backgroundColor = '#1e40af';
                           e.currentTarget.style.transform = 'translateY(0)';
                           e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
@@ -431,7 +493,78 @@ const DatabasePageContent: React.FC = () => {
                   </div>
                 </div>
 
-                {columns.length > 0 && (
+                {/* Onglets */}
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  marginBottom: '2rem',
+                  borderBottom: '2px solid #e2e8f0'
+                }}>
+                  <button
+                    onClick={() => setActiveTab('columns')}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: 'transparent',
+                      color: activeTab === 'columns' ? '#1e40af' : '#64748b',
+                      border: 'none',
+                      borderBottom: activeTab === 'columns' ? '3px solid #1e40af' : '3px solid transparent',
+                      borderRadius: '0',
+                      fontSize: '0.9375rem',
+                      fontWeight: activeTab === 'columns' ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      marginBottom: '-2px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeTab !== 'columns') {
+                        e.currentTarget.style.color = '#475569';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeTab !== 'columns') {
+                        e.currentTarget.style.color = '#64748b';
+                      }
+                    }}
+                  >
+                    Colonnes ({columns.length})
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveTab('data');
+                      if (!tableData) {
+                        loadTableData();
+                      }
+                    }}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: 'transparent',
+                      color: activeTab === 'data' ? '#1e40af' : '#64748b',
+                      border: 'none',
+                      borderBottom: activeTab === 'data' ? '3px solid #1e40af' : '3px solid transparent',
+                      borderRadius: '0',
+                      fontSize: '0.9375rem',
+                      fontWeight: activeTab === 'data' ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      marginBottom: '-2px'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeTab !== 'data') {
+                        e.currentTarget.style.color = '#475569';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeTab !== 'data') {
+                        e.currentTarget.style.color = '#64748b';
+                      }
+                    }}
+                  >
+                    Données {tableData && `(${tableData.total})`}
+                  </button>
+                </div>
+
+                {/* Contenu des onglets */}
+                {activeTab === 'columns' && columns.length > 0 && (
                   <div>
                     <div style={{
                       display: 'flex',
@@ -501,6 +634,289 @@ const DatabasePageContent: React.FC = () => {
                   </div>
                 )}
 
+                {activeTab === 'data' && (
+                  <div>
+                    {/* Barre de recherche */}
+                    <div style={{
+                      display: 'flex',
+                      gap: '1rem',
+                      marginBottom: '1.5rem',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <input
+                          type="text"
+                          placeholder="Rechercher dans les données..."
+                          value={searchTerm}
+                          onChange={(e) => handleSearch(e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '0.75rem 1rem 0.75rem 2.5rem',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '8px',
+                            fontSize: '0.9375rem',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onFocus={(e) => {
+                            e.target.style.borderColor = '#1e40af';
+                            e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1)';
+                          }}
+                          onBlur={(e) => {
+                            e.target.style.borderColor = '#e2e8f0';
+                            e.target.style.boxShadow = 'none';
+                          }}
+                        />
+                        <span style={{
+                          position: 'absolute',
+                          left: '0.75rem',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: '#94a3b8',
+                          fontSize: '1rem'
+                        }}>
+                          🔍
+                        </span>
+                      </div>
+                      {tableData && (
+                        <div style={{
+                          fontSize: '0.875rem',
+                          color: '#64748b',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {tableData.total.toLocaleString('fr-FR')} ligne{tableData.total > 1 ? 's' : ''}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Tableau de données */}
+                    {isLoadingData ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '4rem',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{
+                          display: 'inline-block',
+                          width: '40px',
+                          height: '40px',
+                          border: '4px solid #e2e8f0',
+                          borderTopColor: '#1e40af',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite',
+                          marginBottom: '1rem'
+                        }} />
+                        <p style={{ color: '#64748b' }}>Chargement des données...</p>
+                      </div>
+                    ) : tableData && tableData.rows.length > 0 ? (
+                      <>
+                        <div style={{
+                          overflowX: 'auto',
+                          borderRadius: '8px',
+                          border: '1px solid #e2e8f0',
+                          backgroundColor: 'white'
+                        }}>
+                          <table style={{
+                            width: '100%',
+                            borderCollapse: 'collapse',
+                            minWidth: '800px'
+                          }}>
+                            <thead>
+                              <tr style={{ backgroundColor: '#f8fafc' }}>
+                                {tableData.columns.map((col) => (
+                                  <th
+                                    key={col}
+                                    onClick={() => handleSort(col)}
+                                    style={{
+                                      padding: '0.875rem 1rem',
+                                      textAlign: 'left',
+                                      fontSize: '0.75rem',
+                                      fontWeight: '600',
+                                      color: '#64748b',
+                                      textTransform: 'uppercase',
+                                      letterSpacing: '0.05em',
+                                      borderBottom: '2px solid #e2e8f0',
+                                      cursor: 'pointer',
+                                      userSelect: 'none',
+                                      transition: 'background-color 0.2s ease',
+                                      position: 'sticky',
+                                      top: 0,
+                                      backgroundColor: '#f8fafc',
+                                      zIndex: 10
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#f1f5f9';
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.backgroundColor = '#f8fafc';
+                                    }}
+                                  >
+                                    <div style={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '0.5rem'
+                                    }}>
+                                      <span style={{
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                        flex: 1
+                                      }} title={col}>
+                                        {col}
+                                      </span>
+                                      {sortColumn === col && (
+                                        <span style={{
+                                          fontSize: '0.75rem',
+                                          color: '#1e40af'
+                                        }}>
+                                          {sortOrder === 'asc' ? '↑' : '↓'}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {tableData.rows.map((row, idx) => (
+                                <tr
+                                  key={idx}
+                                  style={{
+                                    borderBottom: '1px solid #e2e8f0',
+                                    transition: 'background-color 0.2s ease'
+                                  }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                  }}
+                                >
+                                  {tableData.columns.map((col) => (
+                                    <td
+                                      key={col}
+                                      style={{
+                                        padding: '0.875rem 1rem',
+                                        fontSize: '0.875rem',
+                                        color: '#1e293b',
+                                        maxWidth: '300px',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                      title={formatCellValue(row[col])}
+                                    >
+                                      {formatCellValue(row[col])}
+                                    </td>
+                                  ))}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginTop: '1.5rem',
+                            paddingTop: '1.5rem',
+                            borderTop: '1px solid #e2e8f0'
+                          }}>
+                            <div style={{
+                              fontSize: '0.875rem',
+                              color: '#64748b'
+                            }}>
+                              Page {currentPage} sur {totalPages} • 
+                              Affichage de {(currentPage - 1) * rowsPerPage + 1} à {Math.min(currentPage * rowsPerPage, tableData.total)} sur {tableData.total.toLocaleString('fr-FR')}
+                            </div>
+                            <div style={{
+                              display: 'flex',
+                              gap: '0.5rem'
+                            }}>
+                              <button
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: currentPage === 1 ? '#f1f5f9' : 'white',
+                                  color: currentPage === 1 ? '#94a3b8' : '#64748b',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (currentPage !== 1) {
+                                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                                    e.currentTarget.style.borderColor = '#cbd5e1';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (currentPage !== 1) {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
+                                  }
+                                }}
+                              >
+                                Précédent
+                              </button>
+                              <button
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages}
+                                style={{
+                                  padding: '0.5rem 1rem',
+                                  backgroundColor: currentPage === totalPages ? '#f1f5f9' : 'white',
+                                  color: currentPage === totalPages ? '#94a3b8' : '#64748b',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  fontSize: '0.875rem',
+                                  fontWeight: '500',
+                                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                  transition: 'all 0.2s ease'
+                                }}
+                                onMouseEnter={(e) => {
+                                  if (currentPage !== totalPages) {
+                                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                                    e.currentTarget.style.borderColor = '#cbd5e1';
+                                  }
+                                }}
+                                onMouseLeave={(e) => {
+                                  if (currentPage !== totalPages) {
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = '#e2e8f0';
+                                  }
+                                }}
+                              >
+                                Suivant
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : tableData && tableData.rows.length === 0 ? (
+                      <div style={{
+                        textAlign: 'center',
+                        padding: '4rem',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <p style={{
+                          fontSize: '1rem',
+                          color: '#64748b'
+                        }}>
+                          {searchTerm ? 'Aucun résultat trouvé pour votre recherche' : 'Aucune donnée dans cette table'}
+                        </p>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
               </div>
             </div>
           )}

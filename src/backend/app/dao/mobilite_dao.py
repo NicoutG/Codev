@@ -34,6 +34,17 @@ class MobiliteDao:
         return deleted > 0
     
     def export_all(self, db: Session) -> List[Dict[str, Any]]:
-        rows = db.query(Mobilite).all()
-        return [{c.name: getattr(r, c.name) for c in Mobilite.__table__.columns} for r in rows]
+        """
+        Récupère toutes les lignes de la table mobilite.
+        Utilise une requête SQL brute pour éviter les erreurs de colonnes manquantes.
+        """
+        from sqlalchemy import text
+        
+        # Récupérer uniquement les colonnes qui existent réellement dans la table
+        result = db.execute(text("SELECT * FROM mobilite"))
+        columns = list(result.keys())
+        rows = result.fetchall()
+        
+        # Convertir les Row en dictionnaires
+        return [dict(zip(columns, row)) for row in rows]
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import metadata, auth, users, indicators, imports, exports
+from app.api.v1 import metadata, auth, users, indicators, imports, exports, data
 from app.core.config import settings
 
 
@@ -26,6 +26,7 @@ app.include_router(metadata.router, prefix="/api/v1/metadata", tags=["métadonn�
 app.include_router(indicators.router, prefix="/api/v1/indicators", tags=["indicateurs"])
 app.include_router(imports.router, prefix="/api/v1/imports", tags=["imports"])
 app.include_router(exports.router, prefix="/api/v1/exports", tags=["exports"])
+app.include_router(data.router, prefix="/api/v1/data", tags=["données"])
 
 @app.get("/")
 def read_root():
