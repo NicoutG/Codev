@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, useMemo } from "react";
-import { getColumnsForTables } from "../api/metadataApi";
 import { useSubject } from "./SubjectContext";
 
 const TableContext = createContext({

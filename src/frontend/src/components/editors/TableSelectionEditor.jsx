@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { TableProvider } from "../../contexts/TableContext";
 import ConditionEditor from "./ConditionEditor";
-import { getTables } from "../../api/metadataApi";
+import { metadataApi } from "../../api/metadata";
 
 export default function TableSelectionEditor({ value, onChange }) {
   const tables = value?.tables || [];
@@ -18,9 +18,9 @@ export default function TableSelectionEditor({ value, onChange }) {
       setLoading(true);
       setError(null);
       try {
-        const data = await getTables();
+        const data = await metadataApi.listTables();
         if (!cancelled) setAvailableTables(data);
-      } catch {
+      } catch (e) {
         if (!cancelled) setError("Impossible de charger les tables");
       } finally {
         if (!cancelled) setLoading(false);
@@ -28,12 +28,14 @@ export default function TableSelectionEditor({ value, onChange }) {
     }
 
     loadTables();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const toggleTable = table => {
+  const toggleTable = (table) => {
     const nextTables = tables.includes(table)
-      ? tables.filter(t => t !== table)
+      ? tables.filter((t) => t !== table)
       : [...tables, table];
     onChange({ ...value, tables: nextTables });
   };
@@ -47,7 +49,7 @@ export default function TableSelectionEditor({ value, onChange }) {
 
         {!loading && !error && (
           <div style={{ display: "flex", flexDirection: "column", marginTop: 4 }}>
-            {availableTables.map(t => (
+            {availableTables.map((t) => (
               <label key={t} style={{ display: "flex", gap: 4 }}>
                 <input
                   type="checkbox"
@@ -72,7 +74,7 @@ export default function TableSelectionEditor({ value, onChange }) {
 
         <ConditionEditor
           value={conditions}
-          onChange={cond => onChange({ ...value, conditions: cond })}
+          onChange={(cond) => onChange({ ...value, conditions: cond })}
         />
       </div>
     </TableProvider>
