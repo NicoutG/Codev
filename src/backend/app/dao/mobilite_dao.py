@@ -6,26 +6,65 @@ from app.models.mobilite import Mobilite
 from typing import Any, Dict, List
 
 class MobiliteDao:
+    def _get_existing_columns(self, db: Session) -> set:
+        """Récupère les colonnes qui existent réellement dans la table."""
+        from sqlalchemy import text
+        
+        result = db.execute(text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'mobilite'
+        """))
+        return {row[0] for row in result.fetchall()}
+    
     def upsert(self, db: Session, payload: dict) -> Mobilite:
         """
         UPSERT PostgreSQL sur la PK: id_polytech_inter
         payload doit contenir au minimum {"id_polytech_inter": "..."}
+        Utilise une requête SQL brute pour éviter les erreurs de colonnes manquantes.
         """
+        from sqlalchemy import text
+        
         if not payload.get("id_polytech_inter"):
             raise ValueError("Missing required primary key field: id_polytech_inter")
 
-        stmt = insert(Mobilite).values(**payload)
+        # Récupérer les colonnes existantes dans la table
+        existing_cols = self._get_existing_columns(db)
+        
+        # Filtrer le payload pour ne garder que les colonnes existantes
+        filtered_payload = {k: v for k, v in payload.items() if k in existing_cols}
+        
+        if not filtered_payload:
+            raise ValueError("Aucune colonne valide dans le payload")
 
-        update_cols = {c.name: stmt.excluded[c.name] for c in Mobilite.__table__.columns if c.name != "id_polytech_inter"}
-
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["id_polytech_inter"],
-            set_=update_cols
-        ).returning(Mobilite)
-
-        row = db.execute(stmt).scalar_one()
+        # Construire la requête SQL brute pour UPSERT
+        columns = list(filtered_payload.keys())
+        placeholders = [f":{col}" for col in columns]
+        
+        # Valeurs pour INSERT
+        values_clause = ", ".join(placeholders)
+        columns_clause = ", ".join([f'"{col}"' for col in columns])
+        
+        # Valeurs pour UPDATE (toutes sauf la PK)
+        update_cols = [col for col in columns if col != "id_polytech_inter"]
+        update_clause = ", ".join([f'"{col}" = EXCLUDED."{col}"' for col in update_cols])
+        
+        sql = f"""
+            INSERT INTO mobilite ({columns_clause})
+            VALUES ({values_clause})
+            ON CONFLICT (id_polytech_inter) DO UPDATE SET {update_clause}
+            RETURNING *
+        """
+        
+        # Exécuter la requête
+        result = db.execute(text(sql), filtered_payload)
+        row = result.fetchone()
         db.commit()
-        return row
+        
+        # Convertir en dictionnaire pour retourner
+        if row:
+            return Mobilite(**dict(row._mapping))
+        raise ValueError("Aucune ligne retournée après l'upsert")
 
     def delete(self, db: Session, id_polytech_inter: str) -> bool:
         q = db.query(Mobilite).filter(Mobilite.id_polytech_inter == id_polytech_inter)

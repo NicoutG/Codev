@@ -6,26 +6,67 @@ from app.models.insertion import Insertion
 from typing import Any, Dict, List
 
 class InsertionDao:
+    def _get_existing_columns(self, db: Session) -> set:
+        """Récupère les colonnes qui existent réellement dans la table."""
+        from sqlalchemy import text, inspect
+        from app.core.database import engine
+        
+        # Utiliser information_schema pour obtenir les colonnes réelles
+        result = db.execute(text("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = 'insertion'
+        """))
+        return {row[0] for row in result.fetchall()}
+    
     def upsert(self, db: Session, payload: dict) -> Insertion:
         """
         UPSERT PostgreSQL sur la PK: code
         payload doit contenir au minimum {"code": "..."}
+        Utilise une requête SQL brute pour éviter les erreurs de colonnes manquantes.
         """
+        from sqlalchemy import text
+        
         if not payload.get("code"):
             raise ValueError("Missing required primary key field: code")
 
-        stmt = insert(Insertion).values(**payload)
+        # Récupérer les colonnes existantes dans la table
+        existing_cols = self._get_existing_columns(db)
+        
+        # Filtrer le payload pour ne garder que les colonnes existantes
+        filtered_payload = {k: v for k, v in payload.items() if k in existing_cols}
+        
+        if not filtered_payload:
+            raise ValueError("Aucune colonne valide dans le payload")
 
-        update_cols = {c.name: stmt.excluded[c.name] for c in Insertion.__table__.columns if c.name != "code"}
-
-        stmt = stmt.on_conflict_do_update(
-            index_elements=["code"],
-            set_=update_cols
-        ).returning(Insertion)
-
-        row = db.execute(stmt).scalar_one()
+        # Construire la requête SQL brute pour UPSERT
+        columns = list(filtered_payload.keys())
+        placeholders = [f":{col}" for col in columns]
+        
+        # Valeurs pour INSERT
+        values_clause = ", ".join(placeholders)
+        columns_clause = ", ".join([f'"{col}"' for col in columns])
+        
+        # Valeurs pour UPDATE (toutes sauf la PK)
+        update_cols = [col for col in columns if col != "code"]
+        update_clause = ", ".join([f'"{col}" = EXCLUDED."{col}"' for col in update_cols])
+        
+        sql = f"""
+            INSERT INTO insertion ({columns_clause})
+            VALUES ({values_clause})
+            ON CONFLICT (code) DO UPDATE SET {update_clause}
+            RETURNING *
+        """
+        
+        # Exécuter la requête
+        result = db.execute(text(sql), filtered_payload)
+        row = result.fetchone()
         db.commit()
-        return row
+        
+        # Convertir en dictionnaire pour retourner
+        if row:
+            return Insertion(**dict(row._mapping))
+        raise ValueError("Aucune ligne retournée après l'upsert")
 
     def delete(self, db: Session, code: str) -> bool:
         q = db.query(Insertion).filter(Insertion.code == code)
