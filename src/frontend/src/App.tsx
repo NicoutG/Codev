@@ -7,6 +7,8 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import IndicatorList from "./pages/IndicatorList";
 import IndicatorCreate from "./pages/IndicatorCreate";
 import IndicatorEdit from "./pages/IndicatorEdit";
+import IndicatorView from "./pages/IndicatorView";
+import DatabasePage from "./pages/DatabasePage";
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -61,6 +63,14 @@ const AppRoutes = () => {
           }
         />
         <Route
+          path="/indicators/:id"
+          element={
+            <ProtectedRoute>
+              <IndicatorView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/indicators/:id/edit"
           element={
             <ProtectedRoute requiredRole="editeur">
@@ -81,6 +91,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ChangePasswordPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/database"
+          element={
+            <ProtectedRoute>
+              <DatabasePage />
             </ProtectedRoute>
           }
         />

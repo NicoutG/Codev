@@ -81,6 +81,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Indicateurs
               </Link>
+              <Link
+                to="/database"
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  textDecoration: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500',
+                  color: isActive('/database') ? '#1e40af' : '#64748b',
+                  backgroundColor: isActive('/database') ? '#eff6ff' : 'transparent',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Base de données
+              </Link>
               {isAdmin && (
                 <Link
                   to="/users"
