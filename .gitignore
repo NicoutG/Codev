@@ -1,0 +1,336 @@
+# ============================================
+# Python / Backend
+# ============================================
+
+# Environnements virtuels Python
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+**/venv/
+**/env/
+**/ENV/
+
+# Fichiers Python compilés
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# ============================================
+# Node.js / Frontend
+# ============================================
+
+# Dépendances
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+dist-ssr/
+*.local
+
+# Fichiers de cache
+.cache/
+.parcel-cache/
+.npm
+.eslintcache
+.stylelintcache
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+.nyc_output
+
+# Grunt
+.grunt
+
+# Bower
+bower_components
+
+# node-waf
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity
+.yarn-integrity
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Vite
+.vite/
+
+# ============================================
+# IDE / Éditeurs
+# ============================================
+
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ IDEA / PyCharm / WebStorm
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ============================================
+# Base de données
+# ============================================
+
+# Fichiers de base de données
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Dumps SQL
+*.sql
+!schema.sql
+
+# ============================================
+# Fichiers uploadés / temporaires
+# ============================================
+
+# Fichiers uploadés (sauf structure)
+src/backend/uploads/*
+!src/backend/uploads/.gitkeep
+
+# Fichiers temporaires
+*.tmp
+*.temp
+*.bak
+*.backup
+*.swp
+*.swo
+
+# ============================================
+# Logs et fichiers système
+# ============================================
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Fichiers système
+.directory
+.Trash-*
+
+# ============================================
+# Fichiers de configuration sensibles
+# ============================================
+
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Clés et secrets
+*.pem
+*.key
+*.cert
+secrets/
+.secrets
+
+# ============================================
+# Fichiers de build et déploiement
+# ============================================
+
+# Build artifacts
+build/
+dist/
+out/
+target/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# ============================================
+# Fichiers spécifiques au projet
+# ============================================
+
+# Fichiers Excel/CSV uploadés (optionnel - décommenter si nécessaire)
+# src/backend/uploads/*.xlsx
+# src/backend/uploads/*.csv
+
+# Fichiers de données sensibles (optionnel)
+# src/data/*.xlsx
+# src/data/*.csv
+
+# Cache Python
+.python-version
+
+# Alembic (migrations - garder les fichiers de migration mais ignorer les versions compilées)
+# Les fichiers de migration dans alembic/versions/ doivent être versionnés
+# Mais on peut ignorer les fichiers .pyc générés
