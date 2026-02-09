@@ -96,6 +96,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Base de données
               </Link>
+              <Link
+                to="/reports"
+                style={{
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  textDecoration: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: '500',
+                  color: isActive('/reports') ? '#1e40af' : '#64748b',
+                  backgroundColor: isActive('/reports') ? '#eff6ff' : 'transparent',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Rapports
+              </Link>
               {isAdmin && (
                 <Link
                   to="/users"

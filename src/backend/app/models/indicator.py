@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from app.core.database import Base
 
@@ -21,4 +22,12 @@ class Indicator(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         onupdate=func.now()
+    )
+    
+    # Relation many-to-many avec Report
+    reports = relationship(
+        "Report",
+        secondary="report_indicators",
+        back_populates="indicators",
+        lazy="select"
     )

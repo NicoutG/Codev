@@ -9,6 +9,10 @@ import IndicatorCreate from "./pages/IndicatorCreate";
 import IndicatorEdit from "./pages/IndicatorEdit";
 import IndicatorView from "./pages/IndicatorView";
 import DatabasePage from "./pages/DatabasePage";
+import ReportList from "./pages/ReportList";
+import ReportCreate from "./pages/ReportCreate";
+import ReportEdit from "./pages/ReportEdit";
+import ReportView from "./pages/ReportView";
 
 const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -99,6 +103,38 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <DatabasePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <ProtectedRoute>
+              <ReportList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/new"
+          element={
+            <ProtectedRoute requiredRole="editeur">
+              <ReportCreate />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/:id"
+          element={
+            <ProtectedRoute>
+              <ReportView />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reports/:id/edit"
+          element={
+            <ProtectedRoute requiredRole="editeur">
+              <ReportEdit />
             </ProtectedRoute>
           }
         />

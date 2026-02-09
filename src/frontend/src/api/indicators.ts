@@ -47,5 +47,17 @@ export const indicatorsApi = {
 
   async delete(id: number): Promise<void> {
     await apiClient.delete(`/api/v1/indicators/${id}`);
+  },
+
+  async execute(id: number): Promise<{
+    sql: string;
+    columns: string[];
+    rows: any[];
+    row_count: number;
+    indicator_id: number;
+    indicator_title: string;
+  }> {
+    const response = await apiClient.post(`/api/v1/indicators/${id}/execute`);
+    return response.data;
   }
 };

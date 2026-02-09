@@ -7,10 +7,12 @@ from app.api.deps import get_current_user, require_role
 from app.models.user import User, UserRole
 from app.schemas.indicator import IndicatorCreate, IndicatorUpdate, IndicatorResponse
 from app.services.indicator_service import IndicatorService
+from app.services.indicator_execution_service import IndicatorExecutionService
 
 
 router = APIRouter()
 service = IndicatorService()
+execution_service = IndicatorExecutionService()
 
 # ✅ Tout utilisateur authentifié peut lire
 @router.get("/", response_model=List[IndicatorResponse])
@@ -58,3 +60,16 @@ def delete_indicator(
 ):
     service.delete_indicator(db, indicator_id)
     return None
+
+
+@router.post("/{indicator_id}/execute")
+def execute_indicator(
+    indicator_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Exécute un indicateur et retourne les résultats.
+    Accessible à tous les utilisateurs authentifiés.
+    """
+    return execution_service.execute_indicator(db, indicator_id)

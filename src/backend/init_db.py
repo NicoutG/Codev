@@ -16,6 +16,7 @@ from app.core.database import SessionLocal, engine, Base
 # ✅ Importer les modèles pour les enregistrer dans Base.metadata
 from app.models.user import User  # noqa: F401
 from app.models.indicator import Indicator  # noqa: F401
+from app.models.report import Report  # noqa: F401
 from app.models.insertion import Insertion  # noqa: F401
 from app.models.etudiants import Etudiants  # noqa: F401
 from app.models.mobilite import Mobilite  # noqa: F401

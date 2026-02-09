@@ -132,5 +132,22 @@ class JsonToSqlTranslator:
             left, right = values
             left_expr = self._expr(left) if isinstance(left, dict) or isinstance(left, str) else str(left)
             right_expr = self._expr(right) if isinstance(right, dict) or isinstance(right, str) else str(right)
+            
+            # Gérer les comparaisons avec NULL
+            if right is None or right_expr.upper() == "NONE" or right_expr.upper() == "NULL":
+                if op == "=" or op == "==":
+                    return f"{left_expr} IS NULL"
+                elif op == "!=" or op == "<>":
+                    return f"{left_expr} IS NOT NULL"
+                else:
+                    # Pour les autres opérateurs avec NULL, utiliser IS NULL/IS NOT NULL
+                    return f"{left_expr} IS NOT NULL"
+            
+            # Gérer les opérateurs spéciaux
+            if op == "==":
+                op = "="
+            elif op == "!=":
+                op = "<>"
+            
             return f"{left_expr} {op} {right_expr}"
         raise ValueError(f"Condition inconnue : {cond}")

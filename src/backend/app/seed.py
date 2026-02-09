@@ -16,6 +16,12 @@ def seed_users(db: Session) -> None:
     existing_users = db.query(User).count()
     if existing_users > 0:
         print("Les utilisateurs existent déjà. Suppression des anciens utilisateurs...")
+        # Supprimer d'abord les références dans les autres tables
+        from app.models.report import Report
+        db.query(Indicator).update({"created_by": None})
+        db.query(Report).update({"created_by": None})
+        db.commit()
+        # Maintenant on peut supprimer les users
         db.query(User).delete()
         db.commit()
 
