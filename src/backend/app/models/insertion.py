@@ -50,6 +50,7 @@ class Insertion(Base):
     condition_depart_entrprise = Column(Text, nullable=True)
     condition_depart_entreprise_autre = Column(Text, nullable=True)
     objectif_premier_emploi = Column(Text, nullable=True)
+    objectif_premier_emploi_autre = Column(Text, nullable=True)
     intitule_emploi = Column(Text, nullable=True)
     responsabilite_hierarchique = Column(Text, nullable=True)
     responsabilite_projet = Column(Text, nullable=True)

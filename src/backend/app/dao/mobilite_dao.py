@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from app.models.mobilite import Mobilite
-
+from typing import Any, Dict, List
 
 class MobiliteDao:
     def upsert(self, db: Session, payload: dict) -> Mobilite:
@@ -32,3 +32,8 @@ class MobiliteDao:
         deleted = q.delete(synchronize_session=False)
         db.commit()
         return deleted > 0
+    
+    def export_all(self, db: Session) -> List[Dict[str, Any]]:
+        rows = db.query(Mobilite).all()
+        return [{c.name: getattr(r, c.name) for c in Mobilite.__table__.columns} for r in rows]
+

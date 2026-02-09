@@ -57,6 +57,7 @@ class MetadataDao:
                 "condition_depart_entrprise",
                 "condition_depart_entreprise_autre",
                 "objectif_premier_emploi",
+                "objectif_premier_emploi_autre",
                 "intitule_emploi",
                 "responsabilite_hierarchique",
                 "responsabilite_projet",

@@ -3,7 +3,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.dialects.postgresql import insert
 from app.models.insertion import Insertion
-
+from typing import Any, Dict, List
 
 class InsertionDao:
     def upsert(self, db: Session, payload: dict) -> Insertion:
@@ -32,3 +32,8 @@ class InsertionDao:
         deleted = q.delete(synchronize_session=False)
         db.commit()
         return deleted > 0
+
+    def export_all(self, db: Session) -> List[Dict[str, Any]]:
+        rows = db.query(Insertion).all()
+        return [{c.name: getattr(r, c.name) for c in Insertion.__table__.columns} for r in rows]
+
