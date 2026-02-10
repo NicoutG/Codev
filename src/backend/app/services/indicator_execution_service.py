@@ -5,7 +5,6 @@ from typing import Dict, List, Any, Optional
 from app.dao.indicator_dao import IndicatorDao
 from app.utils.sql_translator import JsonToSqlTranslator
 
-
 class IndicatorExecutionService:
     def __init__(self):
         self.dao = IndicatorDao()

@@ -4,6 +4,8 @@ from typing import Dict, Any, List, Tuple, Optional
 import re
 import unicodedata
 
+from app.utils.normalization import normalize_text_value
+
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError, DataError, IntegrityError, ProgrammingError
@@ -51,29 +53,6 @@ def _detect_delimiter(sample: str) -> str:
     except Exception:
         pass
     return ";"
-
-def normalize_text_value(value: Optional[str]) -> Optional[str]:
-    """
-    Normalise un champ texte avant insertion en base:
-    - trim
-    - unicode normalize
-    - remplace \r \n \t par espaces
-    - remplace ' et " par espace
-    - supprime caractères de contrôle invisibles
-    - lower
-    - compacte les espaces (max 1 espace consécutif) + trim final
-    """
-    if value is None:
-        return None
-
-    v = str(value)
-    v = unicodedata.normalize("NFKC", v)
-    v = v.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
-    v = v.replace("'", " ").replace('"', " ")
-    v = "".join(ch for ch in v if ch == " " or unicodedata.category(ch)[0] != "C")
-    v = v.lower()
-    v = re.sub(r"\s+", " ", v).strip()
-    return v
 
 def _looks_like_int(s: str) -> bool:
     if s is None:

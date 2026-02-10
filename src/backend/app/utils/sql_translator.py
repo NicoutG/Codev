@@ -1,3 +1,6 @@
+from app.utils.normalization import normalize_text_value
+
+
 class JsonToSqlTranslator:
     def __init__(self, spec: dict):
         self.spec = spec
@@ -63,8 +66,9 @@ class JsonToSqlTranslator:
         if isinstance(expr, bool):
             return "TRUE" if expr else "FALSE"
         if isinstance(expr, str):
-            # Échapper les apostrophes pour PostgreSQL (doubler les apostrophes)
-            escaped = expr.replace("'", "''")
+            # Normaliser tout texte injecté, puis échapper pour PostgreSQL
+            normalized = normalize_text_value(expr)
+            escaped = normalized.replace("'", "''")
             return f"'{escaped}'"
         if isinstance(expr, dict) and "col" in expr:
             return expr["col"]
@@ -78,7 +82,7 @@ class JsonToSqlTranslator:
                 for arg in expr["args"]
             ]
             op = expr["op"]
-            if op == "/" and len(args) == 2 and args[0].replace('.', '', 1).isdigit() and float(args[0]) == 100:
+            if op == "/" and len(args) == 2 and args[0].replace(".", "", 1).isdigit() and float(args[0]) == 100:
                 args[0] = "100.0"
             return "(" + f" {op} ".join(args) + ")"
         elif "agg" in expr:
@@ -114,7 +118,10 @@ class JsonToSqlTranslator:
         parts = ["CASE"]
         for c in col["cases"]:
             when = self._condition(c["when"])
-            then = f"'{c['label']}'"
+            # Normaliser tout texte injecté dans les labels
+            label_norm = normalize_text_value(c["label"])
+            label_escaped = label_norm.replace("'", "''")
+            then = f"'{label_escaped}'"
             parts.append(f"  WHEN {when} THEN {then}")
         parts.append("END")
         return " ".join(parts)
@@ -132,11 +139,14 @@ class JsonToSqlTranslator:
             return "(" + " AND ".join(self._condition(c) for c in cond["and"]) + ")"
         if "or" in cond:
             return "(" + " OR ".join(self._condition(c) for c in cond["or"]) + ")"
+
         for op, values in cond.items():
             left, right = values
+
+            # Les chaînes passent par _expr() => normalisation + échappement
             left_expr = self._expr(left) if isinstance(left, dict) or isinstance(left, str) else str(left)
             right_expr = self._expr(right) if isinstance(right, dict) or isinstance(right, str) else str(right)
-            
+
             # Gérer les comparaisons avec NULL
             if right is None or right_expr.upper() == "NONE" or right_expr.upper() == "NULL":
                 if op == "=" or op == "==":
@@ -146,23 +156,29 @@ class JsonToSqlTranslator:
                 else:
                     # Pour les autres opérateurs avec NULL, utiliser IS NULL/IS NOT NULL
                     return f"{left_expr} IS NOT NULL"
-            
+
             # Gérer les opérateurs LIKE/ILIKE
             if op == "like" or op == "LIKE":
-                # right_expr doit être une chaîne avec % ou _ pour LIKE
+                # right_expr est déjà normalisé si c'était une string (via _expr)
                 if not right_expr.startswith("'") or not right_expr.endswith("'"):
-                    right_expr = f"'{right_expr}'"
+                    # Si jamais on reçoit un right non-string, on force une chaîne normalisée
+                    normalized = normalize_text_value(str(right))
+                    escaped = normalized.replace("'", "''")
+                    right_expr = f"'{escaped}'"
                 return f"{left_expr} ILIKE {right_expr}"
             elif op == "not_like" or op == "NOT_LIKE":
                 if not right_expr.startswith("'") or not right_expr.endswith("'"):
-                    right_expr = f"'{right_expr}'"
+                    normalized = normalize_text_value(str(right))
+                    escaped = normalized.replace("'", "''")
+                    right_expr = f"'{escaped}'"
                 return f"{left_expr} NOT ILIKE {right_expr}"
-            
+
             # Gérer les opérateurs spéciaux
             if op == "==":
                 op = "="
             elif op == "!=":
                 op = "<>"
-            
+
             return f"{left_expr} {op} {right_expr}"
+
         raise ValueError(f"Condition inconnue : {cond}")
