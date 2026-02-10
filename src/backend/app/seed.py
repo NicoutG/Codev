@@ -137,10 +137,9 @@ def seed_predefined_indicators(db: Session) -> None:
                 "sujet": {
                     "tables": ["insertion"],
                     "conditions": {
-                        "or": [
-                            {">=": [{"col": "recherche_emploi_depuis"}, "6"]},
-                            {"like": [{"col": "recherche_emploi_depuis"}, "%6 mois%"]},
-                            {"like": [{"col": "recherche_emploi_depuis"}, "%plus de 6%"]}
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En recherche d'emploi"]},
+                            {"=": [{"col": "recherche_emploi_depuis"}, "Votre sortie de l'école"]}
                         ]
                     }
                 },
@@ -193,12 +192,7 @@ def seed_predefined_indicators(db: Session) -> None:
                     "conditions": {
                         "and": [
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
-                            {
-                                "or": [
-                                    {"like": [{"col": "type_emploi"}, "%CDI%"]},
-                                    {"like": [{"col": "type_emploi"}, "%cdi%"]}
-                                ]
-                            }
+                            {"=": [{"col": "type_emploi"}, "CDI"]}
                         ]
                     }
                 },
@@ -221,7 +215,7 @@ def seed_predefined_indicators(db: Session) -> None:
         },
         {
             "title": "Nombre de diplômés ayant un emploi basé en France",
-            "description": "Nombre de diplômés ayant un emploi basé en France.",
+            "description": "Nombre de diplômés ayant un emploi basé en France (pays NULL ou vide = France).",
             "indicator": {
                 "sujet": {
                     "tables": ["insertion"],
@@ -230,8 +224,8 @@ def seed_predefined_indicators(db: Session) -> None:
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
                             {
                                 "or": [
-                                    {"=": [{"col": "pays"}, "France"]},
-                                    {"like": [{"col": "pays"}, "%France%"]}
+                                    {"=": [{"col": "pays"}, None]},
+                                    {"=": [{"col": "pays"}, ""]}
                                 ]
                             }
                         ]
@@ -257,12 +251,7 @@ def seed_predefined_indicators(db: Session) -> None:
                         "and": [
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
                             {"!=": [{"col": "pays"}, None]},
-                            {
-                                "and": [
-                                    {"!=": [{"col": "pays"}, "France"]},
-                                    {"not_like": [{"col": "pays"}, "%France%"]}
-                                ]
-                            }
+                            {"!=": [{"col": "pays"}, "France"]}
                         ]
                     }
                 },
