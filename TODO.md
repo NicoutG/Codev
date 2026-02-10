@@ -1,5 +1,5 @@
 ## Backend
-- Faire evoluer les utilisateurs pour qu'il aient une categorie : POLYTECH/CTI et créer les route backend pour les changer
+- Faire evoluer les utilisateurs pour qu'il aient une categorie : POLYTECH/CTI et créer les route backend pour les changer (fait par Thomas ?)
 
 ## Front end
 - Faire evoluer le systeme de gestion utilisateur pour permettre aux admins d'attribuer un compte à polytech/CTI

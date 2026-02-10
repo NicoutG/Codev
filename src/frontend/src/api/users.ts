@@ -5,6 +5,7 @@ export interface User {
   username: string;
   email: string;
   role: 'consultant' | 'editeur' | 'admin';
+  category: 'polytech' | 'cti';
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -15,12 +16,14 @@ export interface UserCreate {
   email: string;
   password: string;
   role: 'consultant' | 'editeur' | 'admin';
+  category: 'polytech' | 'cti';
 }
 
 export interface UserUpdate {
   username?: string;
   email?: string;
   role?: 'consultant' | 'editeur' | 'admin';
+  category?: 'polytech' | 'cti';
   password?: string;
   is_active?: boolean;
 }
@@ -48,6 +51,11 @@ export const usersApi = {
 
   updateRole: async (id: number, role: 'consultant' | 'editeur' | 'admin'): Promise<User> => {
     const response = await apiClient.put<User>(`/api/v1/users/${id}/role?role=${role}`);
+    return response.data;
+  },
+
+  updateCategory: async (id: number, category: 'polytech' | 'cti'): Promise<User> => {
+    const response = await apiClient.put<User>(`/api/v1/users/${id}/category?category=${category}`);
     return response.data;
   },
 

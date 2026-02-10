@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserCategory
 from app.core.security import get_password_hash
 
 class UserDao:
@@ -12,13 +12,14 @@ class UserDao:
     def get_all(self, db: Session, skip: int = 0, limit: int = 100) -> list[User]:
         return db.query(User).offset(skip).limit(limit).all()
     
-    def create(self, db: Session, username: str, email: str, password: str, role: UserRole) -> User:
+    def create(self, db: Session, username: str, email: str, password: str, role: UserRole, category: UserCategory) -> User:
         hashed_password = get_password_hash(password)
         db_user = User(
             username=username,
             email=email,
             hashed_password=hashed_password,
-            role=role
+            role=role,
+            category=category
         )
         db.add(db_user)
         db.commit()

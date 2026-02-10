@@ -15,7 +15,8 @@ const UsersPageContent: React.FC = () => {
     username: '',
     email: '',
     password: '',
-    role: 'consultant'
+    role: 'consultant',
+    category: 'polytech'
   });
 
   const { user: currentUser } = useAuth();
@@ -43,7 +44,7 @@ const UsersPageContent: React.FC = () => {
       setError('');
       await usersApi.create(formData);
       setShowCreateForm(false);
-      setFormData({ username: '', email: '', password: '', role: 'consultant' });
+      setFormData({ username: '', email: '', password: '', role: 'consultant', category: 'polytech' });
       loadUsers();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de la création de l\'utilisateur');
@@ -57,6 +58,16 @@ const UsersPageContent: React.FC = () => {
       loadUsers();
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Erreur lors de la modification du rôle');
+    }
+  };
+
+  const handleUpdateCategory = async (userId: number, category: 'polytech' | 'cti') => {
+    try {
+      setError('');
+      await usersApi.updateCategory(userId, category);
+      loadUsers();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Erreur lors de la modification de la catégorie');
     }
   };
 
@@ -81,6 +92,14 @@ const UsersPageContent: React.FC = () => {
     };
     return labels[role] || role;
   };
+
+  const getCategoryLabel = (category: string) => {
+    const labels: Record<string, string> = {
+      polytech: 'Polytech',
+      cti: 'CTI'
+    };
+    return labels[category] || category;
+  }
 
   const getRoleBadgeStyle = (role: string) => {
     const styles: Record<string, { bg: string; color: string }> = {
@@ -282,6 +301,33 @@ const UsersPageContent: React.FC = () => {
                     <option value="admin">Administrateur</option>
                   </select>
                 </div>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    color: '#1e293b',
+                    marginBottom: '0.5rem'
+                  }}>
+                    Catégorie
+                  </label>
+                  <select
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem 1rem',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '0.9375rem',
+                      backgroundColor: 'white',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <option value="polytech">Polytech</option>
+                    <option value="cti">CTI</option>
+                  </select>
+                </div>
               </div>
               <button
                 type="submit"
@@ -461,6 +507,26 @@ const UsersPageContent: React.FC = () => {
                           <option value="consultant">Consultant</option>
                           <option value="editeur">Éditeur</option>
                           <option value="admin">Administrateur</option>
+                        </select>
+                      </td>
+                      <td style={{ padding: '1rem 1.5rem' }}>
+                        <select
+                          value={user.category}
+                          onChange={(e) => handleUpdateCategory(user.id, e.target.value as any)}
+                          disabled={isCurrentUser}
+                          style={{
+                            padding: '0.5rem 0.75rem',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            fontSize: '0.875rem',
+                            backgroundColor: isCurrentUser ? '#f8fafc' : 'white',
+                            color: '#1e293b',
+                            cursor: isCurrentUser ? 'not-allowed' : 'pointer',
+                            fontWeight: '500'
+                          }}
+                        >
+                          <option value="polytech">Polytech</option>
+                          <option value="cti">CTI</option>
                         </select>
                       </td>
                       <td style={{ padding: '1rem 1.5rem', textAlign: 'right' }}>
