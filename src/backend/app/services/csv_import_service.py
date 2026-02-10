@@ -180,8 +180,11 @@ class CsvImportService:
 
         processed = 0
         upserted = 0
+        errors = []
+        CHUNK_SIZE = 100  # Traiter par lots de 100 lignes pour optimiser les performances
 
-        # 5) process rows
+        # 5) process rows par chunks pour optimiser les performances
+        chunk = []
         for row_num, row in enumerate(reader, start=2):  # 2 because header is line 1
             # skip empty lines
             if not row or all((c or "").strip() == "" for c in row):
@@ -200,25 +203,53 @@ class CsvImportService:
 
             pk_val = payload.get(pk_field)
             if pk_val is None or (isinstance(pk_val, str) and pk_val.strip() == ""):
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Ligne {row_num}: clé primaire '{pk_field}' vide.",
-                )
+                errors.append(f"Ligne {row_num}: clé primaire '{pk_field}' vide.")
+                continue
 
+            chunk.append((row_num, payload))
+
+            # Traiter le chunk quand il atteint la taille maximale
+            if len(chunk) >= CHUNK_SIZE:
+                try:
+                    # Utiliser une transaction pour le chunk
+                    for chunk_row_num, chunk_payload in chunk:
+                        try:
+                            dao.upsert(db, chunk_payload)
+                            upserted += 1
+                            processed += 1
+                        except ValueError as ve:
+                            errors.append(f"Ligne {chunk_row_num}: {str(ve)}")
+                        except Exception as e:
+                            errors.append(f"Ligne {chunk_row_num}: erreur lors de l'upsert ({type(e).__name__})")
+                    db.commit()  # Commit après chaque chunk
+                except Exception as e:
+                    db.rollback()
+                    errors.append(f"Erreur lors du traitement du chunk (lignes {chunk[0][0]}-{chunk[-1][0]}): {str(e)}")
+                chunk = []
+
+        # Traiter le dernier chunk s'il reste des lignes
+        if chunk:
             try:
-                dao.upsert(db, payload)
-                upserted += 1
-                processed += 1
-            except ValueError as ve:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=f"Ligne {row_num}: {str(ve)}",
-                )
+                for chunk_row_num, chunk_payload in chunk:
+                    try:
+                        dao.upsert(db, chunk_payload)
+                        upserted += 1
+                        processed += 1
+                    except ValueError as ve:
+                        errors.append(f"Ligne {chunk_row_num}: {str(ve)}")
+                    except Exception as e:
+                        errors.append(f"Ligne {chunk_row_num}: erreur lors de l'upsert ({type(e).__name__})")
+                db.commit()
             except Exception as e:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Ligne {row_num}: erreur lors de l'upsert ({type(e).__name__}).",
-                )
+                db.rollback()
+                errors.append(f"Erreur lors du traitement du dernier chunk: {str(e)}")
+
+        # Si trop d'erreurs, lever une exception
+        if len(errors) > processed * 0.1:  # Plus de 10% d'erreurs
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Trop d'erreurs lors de l'import ({len(errors)} erreurs sur {processed} lignes traitées). Premières erreurs: {errors[:5]}",
+            )
 
         return {
             "status": "ok",
@@ -227,4 +258,6 @@ class CsvImportService:
             "processed_rows": processed,
             "upserted_rows": upserted,
             "ignored_columns": ignored_columns,
+            "errors": errors[:10] if errors else [],  # Limiter à 10 erreurs pour la réponse
+            "error_count": len(errors),
         }

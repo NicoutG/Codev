@@ -56,12 +56,16 @@ class JsonToSqlTranslator:
 
     # ---------- EXPRESSIONS ----------
     def _expr(self, expr) -> str:
+        if expr is None:
+            return "NULL"
         if isinstance(expr, (int, float)):
             return str(expr)
         if isinstance(expr, bool):
-            return "1" if expr else "0"
+            return "TRUE" if expr else "FALSE"
         if isinstance(expr, str):
-            return f"'{expr}'"
+            # Échapper les apostrophes pour PostgreSQL (doubler les apostrophes)
+            escaped = expr.replace("'", "''")
+            return f"'{escaped}'"
         if isinstance(expr, dict) and "col" in expr:
             return expr["col"]
         raise ValueError(f"Expression inconnue : {expr}")
@@ -142,6 +146,17 @@ class JsonToSqlTranslator:
                 else:
                     # Pour les autres opérateurs avec NULL, utiliser IS NULL/IS NOT NULL
                     return f"{left_expr} IS NOT NULL"
+            
+            # Gérer les opérateurs LIKE/ILIKE
+            if op == "like" or op == "LIKE":
+                # right_expr doit être une chaîne avec % ou _ pour LIKE
+                if not right_expr.startswith("'") or not right_expr.endswith("'"):
+                    right_expr = f"'{right_expr}'"
+                return f"{left_expr} ILIKE {right_expr}"
+            elif op == "not_like" or op == "NOT_LIKE":
+                if not right_expr.startswith("'") or not right_expr.endswith("'"):
+                    right_expr = f"'{right_expr}'"
+                return f"{left_expr} NOT ILIKE {right_expr}"
             
             # Gérer les opérateurs spéciaux
             if op == "==":

@@ -1,5 +1,6 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from typing import Dict, List, Any, Optional
 from app.dao.metadata_dao import MetadataDao
 from app.dao.insertion_dao import InsertionDao
@@ -42,66 +43,58 @@ class TableDataService:
         sort_order: str = "asc"
     ) -> Dict[str, Any]:
         """
-        Récupère les données d'une table avec pagination, recherche et tri.
-        
-        Args:
-            db: Session SQLAlchemy
-            table: Nom de la table
-            skip: Nombre de lignes à sauter (pagination)
-            limit: Nombre maximum de lignes à retourner
-            search: Terme de recherche (optionnel)
-            sort_by: Colonne pour le tri (optionnel)
-            sort_order: Ordre de tri ('asc' ou 'desc')
-        
-        Returns:
-            Dict avec:
-            - rows: Liste des lignes (dict)
-            - total: Nombre total de lignes
-            - columns: Liste des colonnes
-            - page: Page actuelle
-            - limit: Limite par page
+        Récupère les données d'une table avec pagination, recherche et tri au niveau SQL.
+        Optimisé pour les gros volumes de données.
         """
         dao = self._get_dao(table)
         columns = self.metadata.get_columns(table)
         
-        # Récupérer toutes les données (pour le moment, on utilise export_all)
-        # TODO: Optimiser avec pagination au niveau SQL si nécessaire
-        all_rows = dao.export_all(db)
-        total = len(all_rows)
+        # Construire la requête SQL avec pagination, recherche et tri
+        base_query = f'SELECT * FROM {table}'
+        where_clauses = []
+        params = {}
         
-        # Recherche (si fournie)
+        # Recherche (si fournie) - recherche dans toutes les colonnes textuelles
         if search:
-            search_lower = search.lower()
-            filtered_rows = []
-            for row in all_rows:
-                # Chercher dans toutes les valeurs de la ligne
-                for value in row.values():
-                    if value and search_lower in str(value).lower():
-                        filtered_rows.append(row)
-                        break
-            all_rows = filtered_rows
-            total = len(all_rows)
+            search_conditions = []
+            for col in columns:
+                # Utiliser ILIKE pour recherche insensible à la casse
+                search_conditions.append(f"{col}::text ILIKE :search_pattern")
+            where_clauses.append(f"({' OR '.join(search_conditions)})")
+            params['search_pattern'] = f'%{search}%'
+        
+        # Construire WHERE
+        where_clause = ''
+        if where_clauses:
+            where_clause = ' WHERE ' + ' AND '.join(where_clauses)
         
         # Tri (si fourni)
+        order_clause = ''
         if sort_by and sort_by in columns:
-            reverse = sort_order.lower() == "desc"
-            try:
-                all_rows.sort(
-                    key=lambda x: (
-                        x.get(sort_by) is not None,
-                        x.get(sort_by) if x.get(sort_by) is not None else ""
-                    ),
-                    reverse=reverse
-                )
-            except Exception:
-                # En cas d'erreur de tri, on continue sans tri
-                pass
+            order_clause = f' ORDER BY {sort_by} {sort_order.upper()}'
+        else:
+            # Par défaut, trier par la première colonne (généralement la clé primaire)
+            if columns:
+                order_clause = f' ORDER BY {columns[0]} ASC'
         
-        # Pagination
-        paginated_rows = all_rows[skip:skip + limit]
+        # Compter le total (avec filtres)
+        count_query = f'SELECT COUNT(*) FROM {table}{where_clause}'
+        total_result = db.execute(text(count_query), params)
+        total = total_result.scalar()
+        
+        # Requête paginée
+        paginated_query = f'{base_query}{where_clause}{order_clause} LIMIT :limit OFFSET :offset'
+        params['limit'] = limit
+        params['offset'] = skip
+        
+        # Exécuter la requête
+        result = db.execute(text(paginated_query), params)
+        rows_data = []
+        for row in result:
+            rows_data.append(dict(row._mapping))
         
         return {
-            "rows": paginated_rows,
+            "rows": rows_data,
             "total": total,
             "columns": columns,
             "page": (skip // limit) + 1 if limit > 0 else 1,
