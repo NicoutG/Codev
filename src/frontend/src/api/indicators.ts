@@ -59,5 +59,16 @@ export const indicatorsApi = {
   }> {
     const response = await apiClient.post(`/api/v1/indicators/${id}/execute`);
     return response.data;
+  },
+
+  async executeJson(indicatorJson: any): Promise<{
+    sql: string;
+    columns: string[];
+    rows: any[];
+    row_count: number;
+    indicator_title: string;
+  }> {
+    const response = await apiClient.post('/api/v1/indicators/execute', indicatorJson);
+    return response.data;
   }
 };

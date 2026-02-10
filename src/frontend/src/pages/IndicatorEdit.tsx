@@ -7,6 +7,14 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, IndicatorUpdate } from '../api/indicators';
 
+interface ExecutionResult {
+  sql: string;
+  columns: string[];
+  rows: any[];
+  row_count: number;
+  indicator_title: string;
+}
+
 const IndicatorEditContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -14,6 +22,9 @@ const IndicatorEditContent: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExecuting, setIsExecuting] = useState(false);
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
+  const [executionError, setExecutionError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -99,6 +110,31 @@ const IndicatorEditContent: React.FC = () => {
     a.click();
     URL.revokeObjectURL(url);
   }
+
+  const handleExecute = async () => {
+    // Vérifier que l'indicateur a au moins une table et une colonne
+    if (!indicator?.sujet?.tables || indicator.sujet.tables.length === 0) {
+      setExecutionError('Veuillez sélectionner au moins une table dans le sujet');
+      return;
+    }
+    if (!indicator?.colonnes || indicator.colonnes.length === 0) {
+      setExecutionError('Veuillez ajouter au moins une colonne');
+      return;
+    }
+
+    try {
+      setIsExecuting(true);
+      setExecutionError('');
+      setExecutionResult(null);
+      
+      const result = await indicatorsApi.executeJson(exportJson);
+      setExecutionResult(result);
+    } catch (err: any) {
+      setExecutionError(err.response?.data?.detail || 'Erreur lors de l\'exécution de l\'indicateur');
+    } finally {
+      setIsExecuting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -451,11 +487,164 @@ const IndicatorEditContent: React.FC = () => {
               )}
             </div>
 
+            {/* Section Résultats d'exécution */}
+            {(executionResult || executionError) && (
+              <div style={{
+                backgroundColor: 'white',
+                padding: '2rem',
+                borderRadius: '12px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
+                border: '1px solid #e2e8f0',
+                marginBottom: '1.5rem'
+              }}>
+                <h2 style={{
+                  fontSize: '1.25rem',
+                  fontWeight: '600',
+                  color: '#1e293b',
+                  marginBottom: '1rem'
+                }}>
+                  Résultats de l'exécution
+                </h2>
+                
+                {executionError && (
+                  <div style={{
+                    padding: '1rem',
+                    backgroundColor: '#fef2f2',
+                    color: '#991b1b',
+                    borderRadius: '8px',
+                    border: '1px solid #fecaca',
+                    fontSize: '0.875rem',
+                    marginBottom: '1rem'
+                  }}>
+                    {executionError}
+                  </div>
+                )}
+
+                {executionResult && (
+                  <div>
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                        <strong>SQL généré :</strong>
+                      </p>
+                      <pre style={{
+                        padding: '1rem',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.8125rem',
+                        overflow: 'auto',
+                        maxHeight: '200px',
+                        fontFamily: 'monospace',
+                        color: '#1e293b'
+                      }}>
+                        {executionResult.sql}
+                      </pre>
+                    </div>
+
+                    <div style={{ marginBottom: '1rem' }}>
+                      <p style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                        <strong>{executionResult.row_count}</strong> ligne{executionResult.row_count > 1 ? 's' : ''} retournée{executionResult.row_count > 1 ? 's' : ''}
+                      </p>
+                    </div>
+
+                    {executionResult.rows.length > 0 && (
+                      <div style={{
+                        overflowX: 'auto',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px'
+                      }}>
+                        <table style={{
+                          width: '100%',
+                          borderCollapse: 'collapse',
+                          fontSize: '0.875rem'
+                        }}>
+                          <thead>
+                            <tr style={{ backgroundColor: '#f8fafc' }}>
+                              {executionResult.columns.map((col, idx) => (
+                                <th key={idx} style={{
+                                  padding: '0.75rem',
+                                  textAlign: 'left',
+                                  fontWeight: '600',
+                                  color: '#1e293b',
+                                  borderBottom: '2px solid #e2e8f0'
+                                }}>
+                                  {col}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {executionResult.rows.slice(0, 50).map((row, rowIdx) => (
+                              <tr key={rowIdx} style={{
+                                borderBottom: '1px solid #e2e8f0'
+                              }}>
+                                {executionResult.columns.map((col, colIdx) => (
+                                  <td key={colIdx} style={{
+                                    padding: '0.75rem',
+                                    color: '#475569'
+                                  }}>
+                                    {row[col] !== null && row[col] !== undefined ? String(row[col]) : '-'}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {executionResult.rows.length > 50 && (
+                          <p style={{
+                            padding: '0.75rem',
+                            fontSize: '0.8125rem',
+                            color: '#64748b',
+                            textAlign: 'center',
+                            fontStyle: 'italic'
+                          }}>
+                            ... et {executionResult.rows.length - 50} ligne{executionResult.rows.length - 50 > 1 ? 's' : ''} supplémentaire{executionResult.rows.length - 50 > 1 ? 's' : ''}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{
               display: 'flex',
               gap: '1rem',
-              justifyContent: 'flex-end'
+              justifyContent: 'flex-end',
+              flexWrap: 'wrap'
             }}>
+              <button
+                type="button"
+                onClick={handleExecute}
+                disabled={isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length ? '#94a3b8' : '#10b981',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  cursor: isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                  boxShadow: isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isExecuting && indicator?.sujet?.tables?.length && indicator?.colonnes?.length) {
+                    e.currentTarget.style.backgroundColor = '#059669';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isExecuting && indicator?.sujet?.tables?.length && indicator?.colonnes?.length) {
+                    e.currentTarget.style.backgroundColor = '#10b981';
+                    e.currentTarget.style.transform = 'translateY(0)';
+                  }
+                }}
+              >
+                {isExecuting ? '⏳ Exécution...' : '▶️ Tester l\'indicateur'}
+              </button>
               <button
                 type="button"
                 onClick={() => navigate('/')}

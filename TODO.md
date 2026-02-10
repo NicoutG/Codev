@@ -1,7 +1,7 @@
 ## Backend
 - Faire evoluer les utilisateurs pour qu'il aient une categorie : POLYTECH/CTI et créer les route backend pour les changer
-- Faire les routes API pour executer un indicateur existant (via ID) et pour executer un indicateur donné dans le body au format json
-- Changer les seeds des indicateur pour mettre des indicateur au vrai format et idealmeent qui sont ceux demandés (au moins quelques uns) dans le sujet.
+- Faire les routes API pour executer un indicateur existant (via ID) et pour executer un indicateur donné dans le body au format json (jules fait)
+- Changer les seeds des indicateur pour mettre des indicateur au vrai format et idealmeent qui sont ceux demandés (au moins quelques uns) dans le sujet. (jules fait)
 
 ## Front end
 - Refactorer le style en dehors des fichiers tsx si possible
