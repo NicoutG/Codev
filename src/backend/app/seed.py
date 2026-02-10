@@ -63,7 +63,8 @@ def seed_users(db: Session) -> None:
 
 def seed_predefined_indicators(db: Session) -> None:
     """
-    Crée les predefined indicators si la table est vide.
+    Crée les indicateurs CTI prédéfinis au format JSON correct.
+    Utilise les indicateurs CTI demandés dans le sujet.
     Stratégie: idempotente -> si des indicateurs existent déjà, on ne touche pas.
     """
     existing = db.query(Indicator).count()
@@ -73,57 +74,242 @@ def seed_predefined_indicators(db: Session) -> None:
 
     admin_user = db.query(User).filter(User.username == "admin").first()
 
+    # Indicateurs CTI au format JSON correct (sujet/colonnes)
     predefined = [
         {
-            "title": "Taux de réussite",
-            "description": "Pourcentage d'étudiants validant l'année.",
+            "title": "Nombre de diplômés employés (y compris thèses et VIE)",
+            "description": "Nombre total de diplômés en emploi, y compris ceux en thèse et en VIE.",
             "indicator": {
-                "type": "ratio",
-                "numerator": "validated_students",
-                "denominator": "total_students",
-                "format": "percent",
-            },
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "or": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {"like": [{"col": "type_etude"}, "%thèse%"]},
+                            {"like": [{"col": "type_etude"}, "%VIE%"]},
+                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Nombre de diplômés employés",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Moyenne générale",
-            "description": "Moyenne des notes sur l'ensemble des UE.",
-            "indicator": {"type": "aggregate", "field": "grade", "op": "avg"},
+            "title": "Insertion de diplômés en moins de 2 mois",
+            "description": "Nombre et pourcentage de diplômés ayant trouvé un emploi en moins de 2 mois.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {
+                                "or": [
+                                    {"=": [{"col": "temps_pour_premier_emploi"}, "0"]},
+                                    {"=": [{"col": "temps_pour_premier_emploi"}, "1"]},
+                                    {"=": [{"col": "temps_pour_premier_emploi"}, "2"]}
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Insertion < 2 mois",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Effectif total",
-            "description": "Nombre total d'étudiants.",
-            "indicator": {"type": "count", "field": "id_polytech"},
+            "title": "En recherche d'emploi 6 mois après l'obtention du diplôme",
+            "description": "Nombre de diplômés toujours en recherche d'emploi 6 mois après l'obtention du diplôme.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En recherche d'emploi"]},
+                            {"=": [{"col": "recherche_emploi_depuis"}, "Votre sortie de l'école"]}
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Recherche d'emploi ≥ 6 mois",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Répartition par sexe",
-            "description": "Nombre d'étudiants par sexe.",
-            "indicator": {"type": "group_count", "group_by": "sexe"},
+            "title": "Embauche avec un statut de cadre (détail H/F)",
+            "description": "Nombre de diplômés embauchés avec un statut de cadre, répartis par genre.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {"=": [{"col": "statut_emploi"}, "Cadre"]}
+                        ]
+                    }
+                },
+                "colonnes": [
+                    {
+                        "type": "group_by",
+                        "titre": "Genre",
+                        "expr": {"col": "genre"}
+                    },
+                    {
+                        "type": "aggregation",
+                        "titre": "Nombre",
+                        "expr": {
+                            "agg": "count",
+                            "col": "1"
+                        }
+                    }
+                ]
+            }
         },
         {
-            "title": "Répartition par âge",
-            "description": "Nombre d'étudiants par âge.",
-            "indicator": {"type": "group_count", "group_by": "age"},
+            "title": "Insertion en CDI (détail H/F)",
+            "description": "Nombre de diplômés en CDI, répartis par genre.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {"=": [{"col": "type_emploi"}, "CDI"]}
+                        ]
+                    }
+                },
+                "colonnes": [
+                    {
+                        "type": "group_by",
+                        "titre": "Genre",
+                        "expr": {"col": "genre"}
+                    },
+                    {
+                        "type": "aggregation",
+                        "titre": "Nombre",
+                        "expr": {
+                            "agg": "count",
+                            "col": "1"
+                        }
+                    }
+                ]
+            }
         },
         {
-            "title": "Boursiers",
-            "description": "Nombre d'étudiants boursiers.",
-            "indicator": {"type": "filter_count", "field": "boursier", "equals": "Oui"},
+            "title": "Nombre de diplômés ayant un emploi basé en France",
+            "description": "Nombre de diplômés ayant un emploi basé en France (pays NULL ou vide = France).",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {
+                                "or": [
+                                    {"=": [{"col": "pays"}, None]},
+                                    {"=": [{"col": "pays"}, ""]}
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Emploi en France",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Mobilité totale",
-            "description": "Nombre d'étudiants ayant eu une mobilité (total).",
-            "indicator": {"type": "aggregate", "field": "total", "op": "sum"},
+            "title": "Insertion poste basé à l'étranger",
+            "description": "Nombre de diplômés ayant un emploi basé à l'étranger.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "and": [
+                            {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
+                            {"!=": [{"col": "pays"}, None]},
+                            {"!=": [{"col": "pays"}, "France"]}
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Emploi à l'étranger",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Stages cumulés",
-            "description": "Somme des mois de stage.",
-            "indicator": {"type": "aggregate", "field": "nb_mois_stage", "op": "sum"},
+            "title": "Nombre de diplômés actuellement en thèse",
+            "description": "Nombre de diplômés actuellement en thèse.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "or": [
+                            {"like": [{"col": "type_etude"}, "%thèse%"]},
+                            {"like": [{"col": "type_etude"}, "%these%"]},
+                            {"like": [{"col": "type_etude"}, "%Thèse%"]},
+                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                        ]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Diplômés en thèse",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
         },
         {
-            "title": "Études cumulées",
-            "description": "Somme des mois d'étude.",
-            "indicator": {"type": "aggregate", "field": "nb_mois_etude", "op": "sum"},
-        },
+            "title": "Diplômés en poursuite d'études",
+            "description": "Nombre de diplômés en poursuite d'études.",
+            "indicator": {
+                "sujet": {
+                    "tables": ["insertion"],
+                    "conditions": {
+                        "=": [{"col": "situation_mars"}, "En poursuite d'études"]
+                    }
+                },
+                "colonnes": [{
+                    "type": "aggregation",
+                    "titre": "Poursuite d'études",
+                    "expr": {
+                        "agg": "count",
+                        "col": "1"
+                    }
+                }]
+            }
+        }
     ]
 
     for item in predefined:
@@ -137,4 +323,4 @@ def seed_predefined_indicators(db: Session) -> None:
         )
 
     db.commit()
-    print(f"✓ Created {len(predefined)} predefined indicators")
+    print(f"✓ Created {len(predefined)} predefined CTI indicators")

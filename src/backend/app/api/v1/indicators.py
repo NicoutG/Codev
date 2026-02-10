@@ -69,7 +69,21 @@ def execute_indicator(
     db: Session = Depends(get_db),
 ):
     """
-    Exécute un indicateur et retourne les résultats.
+    Exécute un indicateur existant (via ID) et retourne les résultats.
     Accessible à tous les utilisateurs authentifiés.
     """
     return execution_service.execute_indicator(db, indicator_id)
+
+
+@router.post("/execute")
+def execute_indicator_json(
+    indicator_json: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Exécute un indicateur donné directement dans le body au format JSON.
+    Format attendu: {"sujet": {"tables": [...], "conditions": {...}}, "colonnes": [...]}
+    Accessible à tous les utilisateurs authentifiés.
+    """
+    return execution_service.execute_indicator_json(db, indicator_json)

@@ -3,6 +3,8 @@ import { usersApi, User, UserCreate } from '../api/users';
 import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 const UsersPageContent: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -92,26 +94,12 @@ const UsersPageContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div style={commonStyles.flexRowBetween}>
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+            <h1 style={commonStyles.pageTitle}>
               Gestion des utilisateurs
             </h1>
-            <p style={{
-              fontSize: '0.9375rem',
-              color: '#64748b'
-            }}>
+            <p style={commonStyles.pageSubtitle}>
               Gérez les accès et les permissions des utilisateurs
             </p>
           </div>

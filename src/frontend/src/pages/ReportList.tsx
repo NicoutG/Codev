@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, Report } from '../api/reports';
+import { commonStyles } from '../styles/common';
 
 const ReportListContent: React.FC = () => {
   const { isEditeur, isAdmin } = useAuth();
@@ -43,24 +44,8 @@ const ReportListContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={{
-          textAlign: 'center',
-          padding: '4rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'inline-block',
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e2e8f0',
-            borderTopColor: '#1e40af',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '1rem'
-          }} />
+        <div style={commonStyles.loadingContainer}>
+          <div style={commonStyles.loadingSpinner} />
           <p style={{ color: '#64748b' }}>Chargement des rapports...</p>
         </div>
       </Layout>
@@ -70,26 +55,12 @@ const ReportListContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div style={commonStyles.flexRowBetween}>
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+            <h1 style={commonStyles.pageTitle}>
               Rapports
             </h1>
-            <p style={{
-              fontSize: '0.9375rem',
-              color: '#64748b'
-            }}>
+            <p style={commonStyles.pageSubtitle}>
               Gérez vos rapports d'indicateurs
             </p>
           </div>

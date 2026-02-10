@@ -4,6 +4,10 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from app.core.database import Base
 
+# Import report_indicators après Base pour éviter les imports circulaires
+# On doit l'importer ici pour que SQLAlchemy puisse le résoudre
+from app.models.report import report_indicators  # noqa: E402
+
 
 class Indicator(Base):
     __tablename__ = "indicators"
@@ -27,7 +31,7 @@ class Indicator(Base):
     # Relation many-to-many avec Report
     reports = relationship(
         "Report",
-        secondary="report_indicators",
+        secondary=report_indicators,
         back_populates="indicators",
         lazy="select"
     )

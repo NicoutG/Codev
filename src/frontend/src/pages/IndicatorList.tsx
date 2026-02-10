@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, Indicator } from '../api/indicators';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 const IndicatorListContent: React.FC = () => {
   const { isEditeur, user } = useAuth();
@@ -56,26 +58,12 @@ const IndicatorListContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '2rem'
-        }}>
+        <div style={commonStyles.flexRowBetween}>
           <div>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+            <h1 style={commonStyles.pageTitle}>
               Indicateurs
             </h1>
-            <p style={{
-              fontSize: '0.9375rem',
-              color: '#64748b'
-            }}>
+            <p style={commonStyles.pageSubtitle}>
               Gérez et visualisez vos indicateurs statistiques
             </p>
           </div>

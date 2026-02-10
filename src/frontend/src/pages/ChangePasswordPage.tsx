@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authApi } from '../api/auth';
 import { Layout } from '../components/common/Layout';
+import { commonStyles } from '../styles/common';
 
 export const ChangePasswordPage: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');

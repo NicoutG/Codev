@@ -55,13 +55,27 @@ class TableDataService:
         params = {}
         
         # Recherche (si fournie) - recherche dans toutes les colonnes textuelles
+        # Mais seulement dans les colonnes qui existent réellement dans la table
         if search:
             search_conditions = []
+            # Vérifier quelles colonnes existent réellement dans la table
+            existing_cols_query = text("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = :table_name
+            """)
+            existing_cols_result = db.execute(existing_cols_query, {"table_name": table})
+            existing_column_names = {row[0] for row in existing_cols_result}
+            
+            # Ne rechercher que dans les colonnes qui existent
             for col in columns:
-                # Utiliser ILIKE pour recherche insensible à la casse
-                search_conditions.append(f"{col}::text ILIKE :search_pattern")
-            where_clauses.append(f"({' OR '.join(search_conditions)})")
-            params['search_pattern'] = f'%{search}%'
+                if col in existing_column_names:
+                    # Utiliser ILIKE pour recherche insensible à la casse
+                    search_conditions.append(f"{col}::text ILIKE :search_pattern")
+            
+            if search_conditions:
+                where_clauses.append(f"({' OR '.join(search_conditions)})")
+                params['search_pattern'] = f'%{search}%'
         
         # Construire WHERE
         where_clause = ''
