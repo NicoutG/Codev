@@ -6,6 +6,8 @@ import ColumnBlock from '../components/blocks/ColumnBlock';
 import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, IndicatorCreate as IndicatorCreateData } from '../api/indicators';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 interface ExecutionResult {
   sql: string;
@@ -150,56 +152,26 @@ const IndicatorCreateContent: React.FC = () => {
     <Layout>
       <SubjectProvider sujet={indicator.sujet} setSujet={(sujet) => setIndicator({ ...indicator, sujet })}>
         <div>
-          <div style={{ marginBottom: '2rem' }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+          <div style={commonStyles.pageHeader}>
+            <h1 style={commonStyles.pageTitle}>
               Créer un indicateur
             </h1>
-            <p style={{
-              fontSize: '0.9375rem',
-              color: '#64748b'
-            }}>
+            <p style={commonStyles.pageSubtitle}>
               Définissez un nouvel indicateur statistique
             </p>
           </div>
 
           {error && (
-            <div style={{
-              marginBottom: '1.5rem',
-              padding: '1rem',
-              backgroundColor: '#fef2f2',
-              color: '#991b1b',
-              borderRadius: '8px',
-              border: '1px solid #fecaca',
-              fontSize: '0.875rem'
-            }}>
+            <div style={commonStyles.errorMessage}>
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit}>
-            <div style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem'
-            }}>
+            <div style={pageStyles.indicator.formSection}>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#1e293b',
-                  marginBottom: '0.5rem'
-                }}>
-                  Titre de l'indicateur <span style={{ color: '#ef4444' }}>*</span>
+                <label style={commonStyles.label}>
+                  Titre de l'indicateur <span style={commonStyles.labelRequired}>*</span>
                 </label>
                 <input
                   type="text"
@@ -207,17 +179,9 @@ const IndicatorCreateContent: React.FC = () => {
                   onChange={(e) => setIndicator({ ...indicator, title: e.target.value })}
                   required
                   placeholder="Ex: Taux d'insertion par promotion"
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    transition: 'all 0.2s ease'
-                  }}
+                  style={commonStyles.input}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1e40af';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1)';
+                    Object.assign(e.target.style, commonStyles.inputFocus);
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#e2e8f0';
@@ -227,13 +191,7 @@ const IndicatorCreateContent: React.FC = () => {
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.875rem',
-                  fontWeight: '500',
-                  color: '#1e293b',
-                  marginBottom: '0.5rem'
-                }}>
+                <label style={commonStyles.label}>
                   Description (optionnelle)
                 </label>
                 <textarea
@@ -241,19 +199,9 @@ const IndicatorCreateContent: React.FC = () => {
                   onChange={(e) => setIndicator({ ...indicator, description: e.target.value })}
                   placeholder="Décrivez l'indicateur..."
                   rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    fontSize: '0.9375rem',
-                    fontFamily: 'inherit',
-                    resize: 'vertical',
-                    transition: 'all 0.2s ease'
-                  }}
+                  style={commonStyles.textarea}
                   onFocus={(e) => {
-                    e.target.style.borderColor = '#1e40af';
-                    e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1)';
+                    Object.assign(e.target.style, commonStyles.inputFocus);
                   }}
                   onBlur={(e) => {
                     e.target.style.borderColor = '#e2e8f0';
@@ -262,28 +210,16 @@ const IndicatorCreateContent: React.FC = () => {
                 />
               </div>
 
-              <div style={{
-                display: 'flex',
-                gap: '0.75rem',
-                flexWrap: 'wrap'
-              }}>
+              <div style={pageStyles.indicator.importExportButtons}>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   style={{
-                    padding: '0.625rem 1.25rem',
-                    backgroundColor: '#f1f5f9',
-                    color: '#64748b',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    ...commonStyles.buttonSmall,
+                    ...commonStyles.buttonSecondary,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#e2e8f0';
-                    e.currentTarget.style.color = '#475569';
+                    Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '#f1f5f9';
@@ -303,19 +239,11 @@ const IndicatorCreateContent: React.FC = () => {
                   type="button"
                   onClick={exportToFile}
                   style={{
-                    padding: '0.625rem 1.25rem',
-                    backgroundColor: '#f1f5f9',
-                    color: '#64748b',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
+                    ...commonStyles.buttonSmall,
+                    ...commonStyles.buttonSecondary,
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#e2e8f0';
-                    e.currentTarget.style.color = '#475569';
+                    Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = '#f1f5f9';
@@ -327,20 +255,8 @@ const IndicatorCreateContent: React.FC = () => {
               </div>
             </div>
 
-            <div style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem'
-            }}>
-              <h2 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
-                color: '#1e293b',
-                marginBottom: '1rem'
-              }}>
+            <div style={pageStyles.indicator.formSection}>
+              <h2 style={pageStyles.indicator.sectionTitle}>
                 Sujet
               </h2>
               <SubjectBlock
@@ -349,42 +265,15 @@ const IndicatorCreateContent: React.FC = () => {
               />
             </div>
 
-            <div style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '1rem'
-              }}>
-                <h2 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#1e293b'
-                }}>
+            <div style={pageStyles.indicator.formSection}>
+              <div style={pageStyles.indicator.sectionHeader}>
+                <h2 style={pageStyles.indicator.sectionTitle}>
                   Colonnes
                 </h2>
                 <button
                   type="button"
                   onClick={addColumn}
-                  style={{
-                    padding: '0.5rem 1rem',
-                    backgroundColor: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-                  }}
+                  style={pageStyles.indicator.addColumnButton}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#059669';
                     e.currentTarget.style.transform = 'translateY(-1px)';
@@ -398,24 +287,12 @@ const IndicatorCreateContent: React.FC = () => {
                 </button>
               </div>
               {indicator.colonnes.length === 0 ? (
-                <p style={{
-                  color: '#94a3b8',
-                  fontSize: '0.875rem',
-                  fontStyle: 'italic',
-                  textAlign: 'center',
-                  padding: '2rem'
-                }}>
+                <p style={pageStyles.indicator.emptyColumns}>
                   Aucune colonne définie. Ajoutez-en une pour commencer.
                 </p>
               ) : (
                 indicator.colonnes.map((col: any, i: number) => (
-                  <div key={i} style={{
-                    marginBottom: '1rem',
-                    padding: '1rem',
-                    backgroundColor: '#f8fafc',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
-                  }}>
+                  <div key={i} style={pageStyles.indicator.columnItem}>
                     <ColumnBlock
                       value={col}
                       onChange={(newCol) => updateColumn(i, newCol)}
@@ -428,33 +305,13 @@ const IndicatorCreateContent: React.FC = () => {
 
             {/* Section Résultats d'exécution */}
             {(executionResult || executionError) && (
-              <div style={{
-                backgroundColor: 'white',
-                padding: '2rem',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-                border: '1px solid #e2e8f0',
-                marginBottom: '1.5rem'
-              }}>
-                <h2 style={{
-                  fontSize: '1.25rem',
-                  fontWeight: '600',
-                  color: '#1e293b',
-                  marginBottom: '1rem'
-                }}>
+              <div style={pageStyles.indicator.executionResult}>
+                <h2 style={pageStyles.indicator.sectionTitle}>
                   Résultats de l'exécution
                 </h2>
                 
                 {executionError && (
-                  <div style={{
-                    padding: '1rem',
-                    backgroundColor: '#fef2f2',
-                    color: '#991b1b',
-                    borderRadius: '8px',
-                    border: '1px solid #fecaca',
-                    fontSize: '0.875rem',
-                    marginBottom: '1rem'
-                  }}>
+                  <div style={commonStyles.errorMessage}>
                     {executionError}
                   </div>
                 )}
@@ -465,17 +322,7 @@ const IndicatorCreateContent: React.FC = () => {
                       <p style={{ fontSize: '0.875rem', color: '#64748b', marginBottom: '0.5rem' }}>
                         <strong>SQL généré :</strong>
                       </p>
-                      <pre style={{
-                        padding: '1rem',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '0.8125rem',
-                        overflow: 'auto',
-                        maxHeight: '200px',
-                        fontFamily: 'monospace',
-                        color: '#1e293b'
-                      }}>
+                      <pre style={pageStyles.indicator.sqlPreview}>
                         {executionResult.sql}
                       </pre>
                     </div>
@@ -487,26 +334,12 @@ const IndicatorCreateContent: React.FC = () => {
                     </div>
 
                     {executionResult.rows.length > 0 && (
-                      <div style={{
-                        overflowX: 'auto',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px'
-                      }}>
-                        <table style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          fontSize: '0.875rem'
-                        }}>
+                      <div style={commonStyles.tableContainer}>
+                        <table style={commonStyles.table}>
                           <thead>
-                            <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <tr style={commonStyles.tableHeader}>
                               {executionResult.columns.map((col, idx) => (
-                                <th key={idx} style={{
-                                  padding: '0.75rem',
-                                  textAlign: 'left',
-                                  fontWeight: '600',
-                                  color: '#1e293b',
-                                  borderBottom: '2px solid #e2e8f0'
-                                }}>
+                                <th key={idx} style={commonStyles.tableHeaderCell}>
                                   {col}
                                 </th>
                               ))}
@@ -514,14 +347,9 @@ const IndicatorCreateContent: React.FC = () => {
                           </thead>
                           <tbody>
                             {executionResult.rows.slice(0, 50).map((row, rowIdx) => (
-                              <tr key={rowIdx} style={{
-                                borderBottom: '1px solid #e2e8f0'
-                              }}>
+                              <tr key={rowIdx} style={commonStyles.tableRow}>
                                 {executionResult.columns.map((col, colIdx) => (
-                                  <td key={colIdx} style={{
-                                    padding: '0.75rem',
-                                    color: '#475569'
-                                  }}>
+                                  <td key={colIdx} style={commonStyles.tableCell}>
                                     {row[col] !== null && row[col] !== undefined ? String(row[col]) : '-'}
                                   </td>
                                 ))}
@@ -547,38 +375,25 @@ const IndicatorCreateContent: React.FC = () => {
               </div>
             )}
 
-            <div style={{
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
-              flexWrap: 'wrap'
-            }}>
+            <div style={pageStyles.indicator.actionButtons}>
               <button
                 type="button"
                 onClick={handleExecute}
                 disabled={isExecuting || !indicator.sujet.tables?.length || !indicator.colonnes?.length}
                 style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: isExecuting || !indicator.sujet.tables?.length || !indicator.colonnes?.length ? '#94a3b8' : '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontWeight: '600',
-                  cursor: isExecuting || !indicator.sujet.tables?.length || !indicator.colonnes?.length ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isExecuting || !indicator.sujet.tables?.length || !indicator.colonnes?.length ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)'
+                  ...commonStyles.buttonSuccess,
+                  ...(isExecuting || !indicator.sujet.tables?.length || !indicator.colonnes?.length ? commonStyles.buttonPrimaryDisabled : {}),
                 }}
                 onMouseEnter={(e) => {
                   if (!isExecuting && indicator.sujet.tables?.length && indicator.colonnes?.length) {
-                    e.currentTarget.style.backgroundColor = '#059669';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    Object.assign(e.currentTarget.style, commonStyles.buttonSuccessHover);
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isExecuting && indicator.sujet.tables?.length && indicator.colonnes?.length) {
                     e.currentTarget.style.backgroundColor = '#10b981';
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
                   }
                 }}
               >
@@ -587,20 +402,9 @@ const IndicatorCreateContent: React.FC = () => {
               <button
                 type="button"
                 onClick={() => navigate('/')}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#f1f5f9',
-                  color: '#64748b',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
+                style={commonStyles.buttonSecondary}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#e2e8f0';
-                  e.currentTarget.style.color = '#475569';
+                  Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.backgroundColor = '#f1f5f9';
@@ -613,27 +417,20 @@ const IndicatorCreateContent: React.FC = () => {
                 type="submit"
                 disabled={isLoading}
                 style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: isLoading ? '#94a3b8' : '#1e40af',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontWeight: '600',
-                  cursor: isLoading ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: isLoading ? 'none' : '0 4px 12px rgba(30, 64, 175, 0.3)'
+                  ...commonStyles.buttonPrimary,
+                  ...(isLoading ? commonStyles.buttonPrimaryDisabled : {}),
                 }}
                 onMouseEnter={(e) => {
                   if (!isLoading) {
-                    e.currentTarget.style.backgroundColor = '#1e3a8a';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
+                    Object.assign(e.currentTarget.style, commonStyles.buttonPrimaryHover);
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.4)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (!isLoading) {
                     e.currentTarget.style.backgroundColor = '#1e40af';
                     e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
                   }
                 }}
               >

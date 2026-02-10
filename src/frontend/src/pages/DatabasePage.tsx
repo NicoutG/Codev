@@ -6,6 +6,8 @@ import { metadataApi } from '../api/metadata';
 import { importsApi, ImportResponse } from '../api/imports';
 import { exportsApi } from '../api/exports';
 import { dataApi, TableDataRow, TableDataResponse } from '../api/data';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 const DatabasePageContent: React.FC = () => {
   const { isEditeur } = useAuth();
@@ -209,62 +211,29 @@ const DatabasePageContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{ marginBottom: '2rem' }}>
-          <h1 style={{
-            fontSize: '2rem',
-            fontWeight: '700',
-            color: '#1e293b',
-            marginBottom: '0.5rem',
-            letterSpacing: '-0.02em'
-          }}>
+        <div style={commonStyles.pageHeader}>
+          <h1 style={commonStyles.pageTitle}>
             Base de données
           </h1>
-          <p style={{
-            fontSize: '0.9375rem',
-            color: '#64748b'
-          }}>
+          <p style={commonStyles.pageSubtitle}>
             Gérez les données des tables et importez/exportez des fichiers CSV
           </p>
         </div>
 
         {error && (
-          <div style={{
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#fef2f2',
-            color: '#991b1b',
-            borderRadius: '8px',
-            border: '1px solid #fecaca',
-            fontSize: '0.875rem'
-          }}>
+          <div style={commonStyles.errorMessage}>
             {error}
           </div>
         )}
 
         {success && (
-          <div style={{
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#f0fdf4',
-            color: '#166534',
-            borderRadius: '8px',
-            border: '1px solid #bbf7d0',
-            fontSize: '0.875rem'
-          }}>
+          <div style={commonStyles.successMessage}>
             {success}
           </div>
         )}
 
         {importProgress && (
-          <div style={{
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#eff6ff',
-            color: '#1e40af',
-            borderRadius: '8px',
-            border: '1px solid #dbeafe',
-            fontSize: '0.875rem'
-          }}>
+          <div style={commonStyles.infoMessage}>
             <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>Résultat de l'import :</div>
             <div>• Lignes traitées : {importProgress.processed_rows}</div>
             <div>• Lignes importées/mises à jour : {importProgress.upserted_rows}</div>
@@ -274,81 +243,30 @@ const DatabasePageContent: React.FC = () => {
           </div>
         )}
 
-        <div style={{
-          width: '100%'
-        }}>
+        <div style={commonStyles.pageContainer}>
           {/* Main content - Détails de la table */}
           {selectedTable && (
             <div>
-              <div style={{
-                backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-                border: '1px solid #e2e8f0',
-                padding: '2rem'
-              }}>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '2rem',
-                  paddingBottom: '1.5rem',
-                  borderBottom: '2px solid #e2e8f0',
-                  flexWrap: 'wrap',
-                  gap: '1rem'
-                }}>
-                  <div style={{ flex: 1, minWidth: '200px' }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.75rem',
-                      marginBottom: '0.5rem'
-                    }}>
-                      <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        backgroundColor: '#eff6ff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#1e40af',
-                        fontSize: '1.25rem',
-                        fontWeight: '600'
-                      }}>
+              <div style={commonStyles.card}>
+                <div style={pageStyles.database.headerContent}>
+                  <div style={pageStyles.database.tableInfo}>
+                    <div style={pageStyles.database.tableInfoHeader}>
+                      <div style={pageStyles.database.tableIcon}>
                         📊
                       </div>
                       <div>
-                        <h2 style={{
-                          fontSize: '1.5rem',
-                          fontWeight: '700',
-                          color: '#1e293b',
-                          margin: 0
-                        }}>
+                        <h2 style={pageStyles.database.tableTitle}>
                           {getTableDisplayName(selectedTable)}
                         </h2>
-                        <p style={{
-                          fontSize: '0.875rem',
-                          color: '#64748b',
-                          margin: '0.25rem 0 0 0'
-                        }}>
+                        <p style={pageStyles.database.tableDescription}>
                           {getTableDescription(selectedTable)}
                         </p>
                       </div>
                     </div>
                   </div>
-                  <div style={{ 
-                    display: 'flex', 
-                    gap: '0.75rem', 
-                    flexShrink: 0,
-                    alignItems: 'center',
-                    flexWrap: 'wrap'
-                  }}>
+                  <div style={pageStyles.database.headerActions}>
                     {/* Sélecteur de table en haut à droite */}
-                    <div style={{
-                      position: 'relative',
-                      minWidth: '220px'
-                    }}>
+                    <div style={pageStyles.database.tableSelector}>
                       <select
                         value={selectedTable || ''}
                         onChange={(e) => {
@@ -364,27 +282,9 @@ const DatabasePageContent: React.FC = () => {
                             setCurrentPage(1);
                           }
                         }}
-                        style={{
-                          padding: '0.75rem 2.5rem 0.75rem 1rem',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '8px',
-                          fontSize: '0.875rem',
-                          fontWeight: '500',
-                          color: '#1e293b',
-                          backgroundColor: 'white',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          width: '100%',
-                          appearance: 'none',
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
-                          backgroundRepeat: 'no-repeat',
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundSize: '12px',
-                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                        }}
+                        style={commonStyles.select}
                         onFocus={(e) => {
-                          e.target.style.borderColor = '#1e40af';
-                          e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1), 0 1px 2px rgba(0,0,0,0.05)';
+                          Object.assign(e.target.style, commonStyles.selectFocus);
                         }}
                         onBlur={(e) => {
                           e.target.style.borderColor = '#e2e8f0';
@@ -392,8 +292,7 @@ const DatabasePageContent: React.FC = () => {
                         }}
                         onMouseEnter={(e) => {
                           if (document.activeElement !== e.target) {
-                            e.target.style.borderColor = '#cbd5e1';
-                            e.target.style.backgroundColor = '#f8fafc';
+                            Object.assign(e.target.style, commonStyles.selectHover);
                           }
                         }}
                         onMouseLeave={(e) => {
@@ -497,26 +396,12 @@ const DatabasePageContent: React.FC = () => {
                 </div>
 
                 {/* Onglets */}
-                <div style={{
-                  display: 'flex',
-                  gap: '0.5rem',
-                  marginBottom: '2rem',
-                  borderBottom: '2px solid #e2e8f0'
-                }}>
+                <div style={commonStyles.tabContainer}>
                   <button
                     onClick={() => setActiveTab('columns')}
                     style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: 'transparent',
-                      color: activeTab === 'columns' ? '#1e40af' : '#64748b',
-                      border: 'none',
-                      borderBottom: activeTab === 'columns' ? '3px solid #1e40af' : '3px solid transparent',
-                      borderRadius: '0',
-                      fontSize: '0.9375rem',
-                      fontWeight: activeTab === 'columns' ? '600' : '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      marginBottom: '-2px'
+                      ...commonStyles.tab,
+                      ...(activeTab === 'columns' ? commonStyles.tabActive : {}),
                     }}
                     onMouseEnter={(e) => {
                       if (activeTab !== 'columns') {
@@ -539,17 +424,8 @@ const DatabasePageContent: React.FC = () => {
                       }
                     }}
                     style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: 'transparent',
-                      color: activeTab === 'data' ? '#1e40af' : '#64748b',
-                      border: 'none',
-                      borderBottom: activeTab === 'data' ? '3px solid #1e40af' : '3px solid transparent',
-                      borderRadius: '0',
-                      fontSize: '0.9375rem',
-                      fontWeight: activeTab === 'data' ? '600' : '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      marginBottom: '-2px'
+                      ...commonStyles.tab,
+                      ...(activeTab === 'data' ? commonStyles.tabActive : {}),
                     }}
                     onMouseEnter={(e) => {
                       if (activeTab !== 'data') {
@@ -569,12 +445,7 @@ const DatabasePageContent: React.FC = () => {
                 {/* Contenu des onglets */}
                 {activeTab === 'columns' && columns.length > 0 && (
                   <div>
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '1rem'
-                    }}>
+                    <div style={commonStyles.flexRowBetween}>
                       <h3 style={{
                         fontSize: '1rem',
                         fontWeight: '600',
@@ -589,36 +460,12 @@ const DatabasePageContent: React.FC = () => {
                         {columns.length} colonne{columns.length > 1 ? 's' : ''} disponible{columns.length > 1 ? 's' : ''}
                       </div>
                     </div>
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                      gap: '0.625rem',
-                      maxHeight: '400px',
-                      overflowY: 'auto',
-                      padding: '0.5rem',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0'
-                    }}>
+                    <div style={pageStyles.database.columnsGrid}>
                       {columns.map((col) => (
                         <div
                           key={col}
                           title={col}
-                          style={{
-                            padding: '0.625rem 0.75rem',
-                            backgroundColor: 'white',
-                            borderRadius: '6px',
-                            border: '1px solid #e2e8f0',
-                            fontSize: '0.8125rem',
-                            color: '#475569',
-                            fontFamily: 'monospace',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            cursor: 'default',
-                            transition: 'all 0.2s ease',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                          }}
+                          style={pageStyles.database.columnBadge}
                           onMouseEnter={(e) => {
                             e.currentTarget.style.backgroundColor = '#eff6ff';
                             e.currentTarget.style.borderColor = '#93c5fd';
@@ -640,43 +487,23 @@ const DatabasePageContent: React.FC = () => {
                 {activeTab === 'data' && (
                   <div>
                     {/* Barre de recherche */}
-                    <div style={{
-                      display: 'flex',
-                      gap: '1rem',
-                      marginBottom: '1.5rem',
-                      alignItems: 'center'
-                    }}>
-                      <div style={{ flex: 1, position: 'relative' }}>
+                    <div style={pageStyles.database.searchBar}>
+                      <div style={commonStyles.searchContainer}>
                         <input
                           type="text"
                           placeholder="Rechercher dans les données..."
                           value={searchTerm}
                           onChange={(e) => handleSearch(e.target.value)}
-                          style={{
-                            width: '100%',
-                            padding: '0.75rem 1rem 0.75rem 2.5rem',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '8px',
-                            fontSize: '0.9375rem',
-                            transition: 'all 0.2s ease'
-                          }}
+                          style={commonStyles.searchInput}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#1e40af';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1)';
+                            Object.assign(e.target.style, commonStyles.inputFocus);
                           }}
                           onBlur={(e) => {
                             e.target.style.borderColor = '#e2e8f0';
                             e.target.style.boxShadow = 'none';
                           }}
                         />
-                        <span style={{
-                          position: 'absolute',
-                          left: '0.75rem',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          color: '#94a3b8',
-                          fontSize: '1rem'
-                        }}>
+                        <span style={commonStyles.searchIcon}>
                           🔍
                         </span>
                       </div>
@@ -693,65 +520,21 @@ const DatabasePageContent: React.FC = () => {
 
                     {/* Tableau de données */}
                     {isLoadingData ? (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '4rem',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0'
-                      }}>
-                        <div style={{
-                          display: 'inline-block',
-                          width: '40px',
-                          height: '40px',
-                          border: '4px solid #e2e8f0',
-                          borderTopColor: '#1e40af',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite',
-                          marginBottom: '1rem'
-                        }} />
+                      <div style={commonStyles.loadingContainer}>
+                        <div style={commonStyles.loadingSpinner} />
                         <p style={{ color: '#64748b' }}>Chargement des données...</p>
                       </div>
                     ) : tableData && tableData.rows.length > 0 ? (
                       <>
-                        <div style={{
-                          overflowX: 'auto',
-                          overflowY: 'visible',
-                          borderRadius: '8px',
-                          border: '1px solid #e2e8f0',
-                          backgroundColor: 'white',
-                          maxWidth: '100%',
-                          position: 'relative'
-                        }}>
-                          <table style={{
-                            width: '100%',
-                            borderCollapse: 'collapse',
-                            minWidth: '800px',
-                            tableLayout: 'auto'
-                          }}>
+                        <div style={commonStyles.tableContainer}>
+                          <table style={commonStyles.table}>
                             <thead>
-                              <tr style={{ backgroundColor: '#f8fafc' }}>
+                              <tr style={commonStyles.tableHeader}>
                                 {tableData.columns.map((col) => (
                                   <th
                                     key={col}
                                     onClick={() => handleSort(col)}
-                                    style={{
-                                      padding: '0.875rem 1rem',
-                                      textAlign: 'left',
-                                      fontSize: '0.75rem',
-                                      fontWeight: '600',
-                                      color: '#64748b',
-                                      textTransform: 'uppercase',
-                                      letterSpacing: '0.05em',
-                                      borderBottom: '2px solid #e2e8f0',
-                                      cursor: 'pointer',
-                                      userSelect: 'none',
-                                      transition: 'background-color 0.2s ease',
-                                      position: 'sticky',
-                                      top: 0,
-                                      backgroundColor: '#f8fafc',
-                                      zIndex: 10
-                                    }}
+                                    style={commonStyles.tableHeaderCell}
                                     onMouseEnter={(e) => {
                                       e.currentTarget.style.backgroundColor = '#f1f5f9';
                                     }}
@@ -789,12 +572,9 @@ const DatabasePageContent: React.FC = () => {
                               {tableData.rows.map((row, idx) => (
                                 <tr
                                   key={idx}
-                                  style={{
-                                    borderBottom: '1px solid #e2e8f0',
-                                    transition: 'background-color 0.2s ease'
-                                  }}
+                                  style={commonStyles.tableRow}
                                   onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#f8fafc';
+                                    Object.assign(e.currentTarget.style, commonStyles.tableRowHover);
                                   }}
                                   onMouseLeave={(e) => {
                                     e.currentTarget.style.backgroundColor = 'white';
@@ -803,16 +583,7 @@ const DatabasePageContent: React.FC = () => {
                                   {tableData.columns.map((col) => (
                                     <td
                                       key={col}
-                                      style={{
-                                        padding: '0.875rem 1rem',
-                                        fontSize: '0.875rem',
-                                        color: '#475569',
-                                        borderBottom: '1px solid #e2e8f0',
-                                        maxWidth: '300px',
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap'
-                                      }}
+                                      style={commonStyles.tableCell}
                                       title={formatCellValue(row[col])}
                                     >
                                       {formatCellValue(row[col])}
@@ -826,43 +597,22 @@ const DatabasePageContent: React.FC = () => {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                          <div style={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            marginTop: '1.5rem',
-                            paddingTop: '1.5rem',
-                            borderTop: '1px solid #e2e8f0'
-                          }}>
-                            <div style={{
-                              fontSize: '0.875rem',
-                              color: '#64748b'
-                            }}>
+                          <div style={commonStyles.paginationContainer}>
+                            <div style={commonStyles.paginationInfo}>
                               Page {currentPage} sur {totalPages} • 
                               Affichage de {(currentPage - 1) * rowsPerPage + 1} à {Math.min(currentPage * rowsPerPage, tableData.total)} sur {tableData.total.toLocaleString('fr-FR')}
                             </div>
-                            <div style={{
-                              display: 'flex',
-                              gap: '0.5rem'
-                            }}>
+                            <div style={commonStyles.paginationButtons}>
                               <button
                                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                 disabled={currentPage === 1}
                                 style={{
-                                  padding: '0.5rem 1rem',
-                                  backgroundColor: currentPage === 1 ? '#f1f5f9' : 'white',
-                                  color: currentPage === 1 ? '#94a3b8' : '#64748b',
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '500',
-                                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                                  transition: 'all 0.2s ease'
+                                  ...commonStyles.paginationButton,
+                                  ...(currentPage === 1 ? commonStyles.paginationButtonDisabled : commonStyles.paginationButtonEnabled),
                                 }}
                                 onMouseEnter={(e) => {
                                   if (currentPage !== 1) {
-                                    e.currentTarget.style.backgroundColor = '#f8fafc';
-                                    e.currentTarget.style.borderColor = '#cbd5e1';
+                                    Object.assign(e.currentTarget.style, commonStyles.paginationButtonHover);
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -878,20 +628,12 @@ const DatabasePageContent: React.FC = () => {
                                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                                 disabled={currentPage === totalPages}
                                 style={{
-                                  padding: '0.5rem 1rem',
-                                  backgroundColor: currentPage === totalPages ? '#f1f5f9' : 'white',
-                                  color: currentPage === totalPages ? '#94a3b8' : '#64748b',
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  fontSize: '0.875rem',
-                                  fontWeight: '500',
-                                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                                  transition: 'all 0.2s ease'
+                                  ...commonStyles.paginationButton,
+                                  ...(currentPage === totalPages ? commonStyles.paginationButtonDisabled : commonStyles.paginationButtonEnabled),
                                 }}
                                 onMouseEnter={(e) => {
                                   if (currentPage !== totalPages) {
-                                    e.currentTarget.style.backgroundColor = '#f8fafc';
-                                    e.currentTarget.style.borderColor = '#cbd5e1';
+                                    Object.assign(e.currentTarget.style, commonStyles.paginationButtonHover);
                                   }
                                 }}
                                 onMouseLeave={(e) => {
@@ -908,17 +650,8 @@ const DatabasePageContent: React.FC = () => {
                         )}
                       </>
                     ) : tableData && tableData.rows.length === 0 ? (
-                      <div style={{
-                        textAlign: 'center',
-                        padding: '4rem',
-                        backgroundColor: '#f8fafc',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0'
-                      }}>
-                        <p style={{
-                          fontSize: '1rem',
-                          color: '#64748b'
-                        }}>
+                      <div style={commonStyles.emptyState}>
+                        <p style={commonStyles.emptyStateText}>
                           {searchTerm ? 'Aucun résultat trouvé pour votre recherche' : 'Aucune donnée dans cette table'}
                         </p>
                       </div>

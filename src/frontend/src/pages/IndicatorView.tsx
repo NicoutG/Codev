@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, Indicator } from '../api/indicators';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 interface ExecutionResult {
   sql: string;

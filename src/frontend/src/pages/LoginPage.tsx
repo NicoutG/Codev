@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');

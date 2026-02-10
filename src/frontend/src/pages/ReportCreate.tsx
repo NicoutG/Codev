@@ -4,6 +4,8 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, ReportCreate as ReportCreateSchema, ReportIndicatorConfig } from '../api/reports';
 import { indicatorsApi, Indicator } from '../api/indicators';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 const chartTypes = [
   { value: null, label: 'Aucun graphique' },

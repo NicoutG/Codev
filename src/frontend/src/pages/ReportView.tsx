@@ -5,6 +5,8 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, Report, ReportGenerateResponse } from '../api/reports';
 import { Chart } from '../components/charts/Chart';
+import { commonStyles } from '../styles/common';
+import { pageStyles } from '../styles/pages';
 
 const exportFormats = [
   { value: 'json', label: 'JSON' },
@@ -108,24 +110,8 @@ const ReportViewContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={{
-          textAlign: 'center',
-          padding: '4rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'inline-block',
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e2e8f0',
-            borderTopColor: '#1e40af',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '1rem'
-          }} />
+        <div style={commonStyles.loadingContainer}>
+          <div style={commonStyles.loadingSpinner} />
           <p style={{ color: '#64748b' }}>Chargement du rapport...</p>
         </div>
       </Layout>
@@ -136,28 +122,15 @@ const ReportViewContent: React.FC = () => {
     return (
       <Layout>
         <div style={{
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          textAlign: 'center'
+          ...commonStyles.card,
+          textAlign: 'center' as const
         }}>
           <p style={{ color: '#ef4444', marginBottom: '1rem' }}>
             {error}
           </p>
           <button
             onClick={() => navigate('/reports')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#1e40af',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: 'pointer'
-            }}
+            style={commonStyles.buttonPrimary}
           >
             Retour à la liste
           </button>
@@ -171,26 +144,14 @@ const ReportViewContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '2rem'
-        }}>
+        <div style={commonStyles.flexRowBetween}>
           <div style={{ flex: 1 }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
+            <h1 style={commonStyles.pageTitle}>
               {report.title}
             </h1>
             {report.description && (
               <p style={{
-                fontSize: '0.9375rem',
-                color: '#64748b',
+                ...commonStyles.pageSubtitle,
                 marginBottom: '1rem',
                 lineHeight: '1.6'
               }}>
@@ -204,30 +165,17 @@ const ReportViewContent: React.FC = () => {
               {report.indicators.length} indicateur{report.indicators.length > 1 ? 's' : ''} dans ce rapport
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
             <button
               onClick={generateReport}
               disabled={isGenerating}
               style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: isGenerating ? '#94a3b8' : '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.9375rem',
-                fontWeight: '500',
-                cursor: isGenerating ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: isGenerating ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem'
+                ...commonStyles.buttonSuccess,
+                ...(isGenerating ? commonStyles.buttonPrimaryDisabled : {}),
               }}
               onMouseEnter={(e) => {
                 if (!isGenerating) {
-                  e.currentTarget.style.backgroundColor = '#059669';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
+                  Object.assign(e.currentTarget.style, commonStyles.buttonSuccessHover);
                 }
               }}
               onMouseLeave={(e) => {
@@ -275,20 +223,9 @@ const ReportViewContent: React.FC = () => {
                   <button
                     key={format.value}
                     onClick={() => handleExport(format.value)}
-                    style={{
-                      padding: '0.75rem 1.5rem',
-                      backgroundColor: '#f1f5f9',
-                      color: '#64748b',
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      fontSize: '0.875rem',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
+                    style={commonStyles.buttonSecondary}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#e2e8f0';
-                      e.currentTarget.style.color = '#475569';
+                      Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.backgroundColor = '#f1f5f9';
