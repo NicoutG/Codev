@@ -54,7 +54,7 @@ class MetadataDao:
                 "type_volontariat",
                 "type_volontariat_autre",
                 "statut_emploi",
-                "condition_depart_entrprise",
+                "condition_depart_entreprise",
                 "condition_depart_entreprise_autre",
                 "objectif_premier_emploi",
                 "objectif_premier_emploi_autre",

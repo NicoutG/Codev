@@ -1,19 +1,25 @@
 import csv
 import io
+from typing import Dict, Any, List, Tuple, Optional
 import re
-from typing import Dict, Any, List
+import unicodedata
 
 from fastapi import HTTPException, status, UploadFile
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError, DataError, IntegrityError, ProgrammingError
+from sqlalchemy import Integer
 
 from app.dao.metadata_dao import MetadataDao
 from app.dao.insertion_dao import InsertionDao
 from app.dao.etudiants_dao import EtudiantsDao
 from app.dao.mobilite_dao import MobiliteDao
 
+from app.models.insertion import Insertion
+from app.models.etudiants import Etudiants
+from app.models.mobilite import Mobilite
+
 
 def _normalize_header(h: str) -> str:
-    # minuscule + trim + espaces -> underscore
     h = (h or "").strip().lower()
     h = re.sub(r"\s+", "_", h)
     h = re.sub(r"_+", "_", h)
@@ -21,20 +27,15 @@ def _normalize_header(h: str) -> str:
 
 
 def _decode_bytes(b: bytes) -> str:
-    # Try UTF-8 (with BOM) then fallback
     for enc in ("utf-8-sig", "utf-8", "latin-1"):
         try:
             return b.decode(enc)
         except UnicodeDecodeError:
             continue
-    # last resort
     return b.decode("utf-8", errors="replace")
 
 
 def _detect_delimiter(sample: str) -> str:
-    """
-    Detect delimiter between ',' and ';' (and fallback to Sniffer).
-    """
     first_line = sample.splitlines()[0] if sample else ""
     comma = first_line.count(",")
     semi = first_line.count(";")
@@ -43,16 +44,58 @@ def _detect_delimiter(sample: str) -> str:
     if comma > semi:
         return ","
 
-    # fallback sniffer
     try:
         dialect = csv.Sniffer().sniff(sample[:4096], delimiters=[",", ";", "\t"])
         if dialect.delimiter in [",", ";", "\t"]:
             return dialect.delimiter
     except Exception:
         pass
-
-    # default
     return ";"
+
+def normalize_text_value(value: Optional[str]) -> Optional[str]:
+    """
+    Normalise un champ texte avant insertion en base:
+    - trim
+    - unicode normalize
+    - remplace \r \n \t par espaces
+    - remplace ' et " par espace
+    - supprime caractères de contrôle invisibles
+    - lower
+    - compacte les espaces (max 1 espace consécutif) + trim final
+    """
+    if value is None:
+        return None
+
+    v = str(value)
+    v = unicodedata.normalize("NFKC", v)
+    v = v.replace("\r\n", " ").replace("\n", " ").replace("\r", " ").replace("\t", " ")
+    v = v.replace("'", " ").replace('"', " ")
+    v = "".join(ch for ch in v if ch == " " or unicodedata.category(ch)[0] != "C")
+    v = v.lower()
+    v = re.sub(r"\s+", " ", v).strip()
+    return v
+
+def _looks_like_int(s: str) -> bool:
+    if s is None:
+        return False
+    s = s.strip()
+    if s == "":
+        return False
+    return re.fullmatch(r"-?\d+", s) is not None
+
+
+def _build_sqlalchemy_error_detail(e: Exception) -> str:
+    parts = [type(e).__name__]
+    orig = getattr(e, "orig", None)
+    if orig is not None:
+        parts.append(str(orig))
+    msg = str(e)
+    if msg:
+        parts.append(msg)
+    stmt = getattr(e, "statement", None)
+    if stmt:
+        parts.append(f"SQL: {stmt[:250]}")
+    return " | ".join(parts)
 
 
 class CsvImportService:
@@ -64,17 +107,21 @@ class CsvImportService:
     def __init__(self):
         self.metadata = MetadataDao()
 
-        # mapping table -> (primary_key, dao)
         self._dao_by_table = {
             "insertion": ("code", InsertionDao()),
             "etudiants": ("id_polytech", EtudiantsDao()),
             "mobilite": ("id_polytech_inter", MobiliteDao()),
         }
 
+        # modèle -> pour détecter Integer/Text
+        self._model_by_table = {
+            "insertion": Insertion,
+            "etudiants": Etudiants,
+            "mobilite": Mobilite,
+        }
+
     def _get_expected_columns(self, table: str) -> List[str]:
-        cols = self.metadata.get_columns(table)
-        # on suppose que metadata_dao expose déjà les noms normalisés
-        return cols
+        return self.metadata.get_columns(table)
 
     def _get_pk_and_dao(self, table: str):
         if table not in self._dao_by_table:
@@ -82,10 +129,22 @@ class CsvImportService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Table '{table}' non supportée pour l'import.",
             )
-        return self._dao_by_table[table]  # (pk, dao)
+        return self._dao_by_table[table]
+
+    def _get_integer_columns_from_model(self, table: str) -> List[str]:
+        model = self._model_by_table.get(table)
+        if model is None:
+            return []
+        int_cols: List[str] = []
+        try:
+            for col in model.__table__.columns:
+                if isinstance(col.type, Integer):
+                    int_cols.append(col.name)
+        except Exception:
+            return []
+        return int_cols
 
     async def import_csv(self, db: Session, table: str, file: UploadFile) -> Dict[str, Any]:
-        # 1) verify table exists in metadata list
         allowed = self.metadata.get_tables()
         if table not in allowed:
             raise HTTPException(
@@ -102,7 +161,6 @@ class CsvImportService:
                 detail=f"Configuration invalide: la clé primaire '{pk_field}' n'est pas dans les colonnes attendues.",
             )
 
-        # 2) read file
         raw = await file.read()
         if not raw:
             raise HTTPException(
@@ -113,7 +171,6 @@ class CsvImportService:
         text = _decode_bytes(raw)
         delimiter = _detect_delimiter(text)
 
-        # 3) parse CSV
         sio = io.StringIO(text)
         reader = csv.reader(sio, delimiter=delimiter)
 
@@ -127,16 +184,12 @@ class CsvImportService:
 
         header_norm = [_normalize_header(h) for h in header_raw]
 
-        # ignorer les headers vides (ex: ";;" dans la ligne d'en-têtes)
         ignored_columns: List[Dict[str, Any]] = []
-        filtered_pairs = []
+        filtered_pairs: List[Tuple[int, str]] = []
         for idx, col in enumerate(header_norm):
             if col == "":
                 ignored_columns.append(
-                    {
-                        "index": idx,
-                        "raw": header_raw[idx] if idx < len(header_raw) else "",
-                    }
+                    {"index": idx, "raw": header_raw[idx] if idx < len(header_raw) else ""}
                 )
             else:
                 filtered_pairs.append((idx, col))
@@ -150,7 +203,6 @@ class CsvImportService:
         header = [col for _, col in filtered_pairs]
         indices = [i for i, _ in filtered_pairs]
 
-        # 4) validate headers (sur les colonnes filtrées)
         expected_set = set(expected_cols)
         header_set = set(header)
 
@@ -174,81 +226,113 @@ class CsvImportService:
                 detail=f"Clé primaire manquante dans le CSV: '{pk_field}'",
             )
 
-        # index mapping (col -> index original dans la row)
         col_index = {col: original_idx for original_idx, col in filtered_pairs}
         max_index_needed = max(indices) if indices else 0
 
         processed = 0
         upserted = 0
-        errors = []
-        CHUNK_SIZE = 100  # Traiter par lots de 100 lignes pour optimiser les performances
+        errors: List[str] = []
 
-        # 5) process rows par chunks pour optimiser les performances
-        chunk = []
-        for row_num, row in enumerate(reader, start=2):  # 2 because header is line 1
-            # skip empty lines
-            if not row or all((c or "").strip() == "" for c in row):
-                continue
+        int_columns = set(self._get_integer_columns_from_model(table))
 
-            # pad row so we can access the highest index we need
-            if len(row) <= max_index_needed:
-                row = row + [""] * (max_index_needed + 1 - len(row))
+        def _payload_debug(payload: Dict[str, Any]) -> str:
+            pk_val = payload.get(pk_field)
+            suspects = {}
+            for k in sorted(int_columns):
+                if k in payload and payload[k] is not None:
+                    suspects[k] = payload[k]
+            return f"pk={pk_field}={pk_val} | int_fields={suspects}"
 
+        def _push_error(line: int, msg: str, payload: Optional[Dict[str, Any]] = None):
+            if payload:
+                errors.append(f"Ligne {line}: {msg} ({_payload_debug(payload)})")
+            else:
+                errors.append(f"Ligne {line}: {msg}")
+
+        def _prepare_payload(row: List[str]) -> Dict[str, Any]:
             payload: Dict[str, Any] = {}
             for col in expected_cols:
                 idx = col_index[col]
-                val = row[idx] if idx < len(row) else ""
-                val = (val or "").strip()
-                payload[col] = val if val != "" else None
+                raw_val = row[idx] if idx < len(row) else ""
+                norm_val = normalize_text_value(raw_val or "")
+
+                if norm_val == "":
+                    payload[col] = None
+                    continue
+
+                # ⚠️ on garde tout en string ici, et on valide avant DB
+                payload[col] = norm_val
+            return payload
+
+        def _validate_types(payload: Dict[str, Any]) -> Optional[str]:
+            """
+            Retourne un message d'erreur si une valeur ne match pas le type attendu,
+            sinon None.
+            """
+            for col in int_columns:
+                v = payload.get(col)
+                if v is None:
+                    continue
+                # v est string (normalisé)
+                if isinstance(v, str) and not _looks_like_int(v):
+                    return f"Colonne '{col}' attend un entier mais reçu: {v!r}"
+            return None
+
+        # Parcours ligne par ligne avec SAVEPOINT pour éviter l'abort global
+        for row_num, row in enumerate(reader, start=2):
+            if not row or all((c or "").strip() == "" for c in row):
+                continue
+
+            if len(row) <= max_index_needed:
+                row = row + [""] * (max_index_needed + 1 - len(row))
+
+            payload = _prepare_payload(row)
 
             pk_val = payload.get(pk_field)
             if pk_val is None or (isinstance(pk_val, str) and pk_val.strip() == ""):
-                errors.append(f"Ligne {row_num}: clé primaire '{pk_field}' vide.")
+                _push_error(row_num, f"clé primaire '{pk_field}' vide.", payload)
                 continue
 
-            chunk.append((row_num, payload))
+            # validation types AVANT DB
+            type_err = _validate_types(payload)
+            if type_err:
+                _push_error(row_num, type_err, payload)
+                continue
 
-            # Traiter le chunk quand il atteint la taille maximale
-            if len(chunk) >= CHUNK_SIZE:
-                try:
-                    # Utiliser une transaction pour le chunk
-                    for chunk_row_num, chunk_payload in chunk:
-                        try:
-                            dao.upsert(db, chunk_payload)
-                            upserted += 1
-                            processed += 1
-                        except ValueError as ve:
-                            errors.append(f"Ligne {chunk_row_num}: {str(ve)}")
-                        except Exception as e:
-                            errors.append(f"Ligne {chunk_row_num}: erreur lors de l'upsert ({type(e).__name__})")
-                    db.commit()  # Commit après chaque chunk
-                except Exception as e:
-                    db.rollback()
-                    errors.append(f"Erreur lors du traitement du chunk (lignes {chunk[0][0]}-{chunk[-1][0]}): {str(e)}")
-                chunk = []
-
-        # Traiter le dernier chunk s'il reste des lignes
-        if chunk:
+            # SAVEPOINT: une ligne en erreur ne casse pas tout
             try:
-                for chunk_row_num, chunk_payload in chunk:
-                    try:
-                        dao.upsert(db, chunk_payload)
-                        upserted += 1
-                        processed += 1
-                    except ValueError as ve:
-                        errors.append(f"Ligne {chunk_row_num}: {str(ve)}")
-                    except Exception as e:
-                        errors.append(f"Ligne {chunk_row_num}: erreur lors de l'upsert ({type(e).__name__})")
-                db.commit()
-            except Exception as e:
+                with db.begin_nested():
+                    dao.upsert(db, payload)
+                upserted += 1
+                processed += 1
+            except ValueError as ve:
+                _push_error(row_num, str(ve), payload)
+            except (DataError, IntegrityError, ProgrammingError, SQLAlchemyError) as se:
+                _push_error(row_num, _build_sqlalchemy_error_detail(se), payload)
+                # rollback du nested est automatique, mais on sécurise
                 db.rollback()
-                errors.append(f"Erreur lors du traitement du dernier chunk: {str(e)}")
+            except Exception as e:
+                _push_error(row_num, _build_sqlalchemy_error_detail(e), payload)
+                db.rollback()
 
-        # Si trop d'erreurs, lever une exception
-        if len(errors) > processed * 0.1:  # Plus de 10% d'erreurs
+        # commit global
+        try:
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Erreur commit final: {_build_sqlalchemy_error_detail(e)}",
+            )
+
+        # si trop d’erreurs
+        if processed > 0 and len(errors) > processed * 0.1:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Trop d'erreurs lors de l'import ({len(errors)} erreurs sur {processed} lignes traitées). Premières erreurs: {errors[:5]}",
+                detail=(
+                    f"Trop d'erreurs lors de l'import ({len(errors)} erreurs sur {processed} lignes traitées). "
+                    f"Premières erreurs: {errors[:5]}"
+                ),
             )
 
         return {
@@ -258,6 +342,6 @@ class CsvImportService:
             "processed_rows": processed,
             "upserted_rows": upserted,
             "ignored_columns": ignored_columns,
-            "errors": errors[:10] if errors else [],  # Limiter à 10 erreurs pour la réponse
+            "errors": errors[:10] if errors else [],
             "error_count": len(errors),
         }
