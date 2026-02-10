@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from sqlalchemy.orm import Session
 
 from app.core.security import get_password_hash
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserCategory
 from app.models.indicator import Indicator
 
 
@@ -31,18 +31,21 @@ def seed_users(db: Session) -> None:
             "email": "consultant@polytech-lyon.fr",
             "password": "consultant123",
             "role": UserRole.CONSULTANT,
+            "category": UserCategory.POLYTECH,
         },
         {
             "username": "editeur",
             "email": "editeur@polytech-lyon.fr",
             "password": "editeur123",
             "role": UserRole.EDITEUR,
+            "category": UserCategory.POLYTECH,
         },
         {
             "username": "admin",
             "email": "admin@polytech-lyon.fr",
             "password": "admin123",
             "role": UserRole.ADMIN,
+            "category": UserCategory.POLYTECH,
         },
     ]
 

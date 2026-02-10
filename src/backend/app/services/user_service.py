@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.dao.user_dao import UserDao
-from app.models.user import User, UserRole
+from app.models.user import User, UserRole, UserCategory
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import verify_password
 from fastapi import HTTPException, status
@@ -52,7 +52,8 @@ class UserService:
             username=user_data.username,
             email=user_data.email,
             password=user_data.password,
-            role=user_data.role
+            role=user_data.role,
+            category=user_data.category
         )
     
     def update_user(self, db: Session, user_id: int, user_data: UserUpdate, current_user: User) -> User:
