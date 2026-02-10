@@ -48,7 +48,7 @@ const DatabasePageContent: React.FC = () => {
     if (selectedTable && activeTab === 'data') {
       loadTableData();
     }
-  }, [currentPage, searchTerm, sortColumn, sortOrder]);
+  }, [selectedTable, activeTab, currentPage, searchTerm, sortColumn, sortOrder]);
 
   const loadTables = async () => {
     try {
@@ -275,79 +275,8 @@ const DatabasePageContent: React.FC = () => {
         )}
 
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '250px 1fr',
-          gap: '1.5rem'
+          width: '100%'
         }}>
-          {/* Sidebar - Liste des tables */}
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-            border: '1px solid #e2e8f0',
-            padding: '1.25rem',
-            height: 'fit-content',
-            position: 'sticky',
-            top: '90px'
-          }}>
-            <h2 style={{
-              fontSize: '0.75rem',
-              fontWeight: '600',
-              color: '#1e293b',
-              marginBottom: '1rem',
-              paddingBottom: '0.75rem',
-              borderBottom: '2px solid #e2e8f0',
-              textTransform: 'uppercase',
-              letterSpacing: '0.05em'
-            }}>
-              Tables ({tables.length})
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-              {tables.map((table) => (
-                <button
-                  key={table}
-                  onClick={() => {
-                    setSelectedTable(table);
-                    setImportProgress(null);
-                    setSuccess('');
-                    setError('');
-                    setSearchTerm('');
-                    setSortColumn(null);
-                    setSortOrder('asc');
-                    setCurrentPage(1);
-                  }}
-                  style={{
-                    padding: '0.875rem 1rem',
-                    textAlign: 'left',
-                    backgroundColor: selectedTable === table ? '#eff6ff' : 'transparent',
-                    color: selectedTable === table ? '#1e40af' : '#64748b',
-                    border: selectedTable === table ? '1px solid #93c5fd' : '1px solid transparent',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: selectedTable === table ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: selectedTable === table ? '0 2px 4px rgba(30, 64, 175, 0.1)' : 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedTable !== table) {
-                      e.currentTarget.style.backgroundColor = '#f8fafc';
-                      e.currentTarget.style.borderColor = '#e2e8f0';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedTable !== table) {
-                      e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }
-                  }}
-                >
-                  {getTableDisplayName(table)}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Main content - Détails de la table */}
           {selectedTable && (
             <div>
@@ -364,9 +293,11 @@ const DatabasePageContent: React.FC = () => {
                   alignItems: 'flex-start',
                   marginBottom: '2rem',
                   paddingBottom: '1.5rem',
-                  borderBottom: '2px solid #e2e8f0'
+                  borderBottom: '2px solid #e2e8f0',
+                  flexWrap: 'wrap',
+                  gap: '1rem'
                 }}>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: '200px' }}>
                     <div style={{
                       display: 'flex',
                       alignItems: 'center',
@@ -406,7 +337,79 @@ const DatabasePageContent: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  <div style={{ display: 'flex', gap: '0.75rem', flexShrink: 0 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '0.75rem', 
+                    flexShrink: 0,
+                    alignItems: 'center',
+                    flexWrap: 'wrap'
+                  }}>
+                    {/* Sélecteur de table en haut à droite */}
+                    <div style={{
+                      position: 'relative',
+                      minWidth: '220px'
+                    }}>
+                      <select
+                        value={selectedTable || ''}
+                        onChange={(e) => {
+                          const table = e.target.value;
+                          if (table) {
+                            setSelectedTable(table);
+                            setImportProgress(null);
+                            setSuccess('');
+                            setError('');
+                            setSearchTerm('');
+                            setSortColumn(null);
+                            setSortOrder('asc');
+                            setCurrentPage(1);
+                          }
+                        }}
+                        style={{
+                          padding: '0.75rem 2.5rem 0.75rem 1rem',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: '0.875rem',
+                          fontWeight: '500',
+                          color: '#1e293b',
+                          backgroundColor: 'white',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          width: '100%',
+                          appearance: 'none',
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 0.75rem center',
+                          backgroundSize: '12px',
+                          boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        }}
+                        onFocus={(e) => {
+                          e.target.style.borderColor = '#1e40af';
+                          e.target.style.boxShadow = '0 0 0 3px rgba(30, 64, 175, 0.1), 0 1px 2px rgba(0,0,0,0.05)';
+                        }}
+                        onBlur={(e) => {
+                          e.target.style.borderColor = '#e2e8f0';
+                          e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
+                        }}
+                        onMouseEnter={(e) => {
+                          if (document.activeElement !== e.target) {
+                            e.target.style.borderColor = '#cbd5e1';
+                            e.target.style.backgroundColor = '#f8fafc';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (document.activeElement !== e.target) {
+                            e.target.style.borderColor = '#e2e8f0';
+                            e.target.style.backgroundColor = 'white';
+                          }
+                        }}
+                      >
+                        {tables.map((table) => (
+                          <option key={table} value={table}>
+                            {getTableDisplayName(table)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     {isEditeur && (
                       <>
                         <button
@@ -713,14 +716,18 @@ const DatabasePageContent: React.FC = () => {
                       <>
                         <div style={{
                           overflowX: 'auto',
+                          overflowY: 'visible',
                           borderRadius: '8px',
                           border: '1px solid #e2e8f0',
-                          backgroundColor: 'white'
+                          backgroundColor: 'white',
+                          maxWidth: '100%',
+                          position: 'relative'
                         }}>
                           <table style={{
                             width: '100%',
                             borderCollapse: 'collapse',
-                            minWidth: '800px'
+                            minWidth: '800px',
+                            tableLayout: 'auto'
                           }}>
                             <thead>
                               <tr style={{ backgroundColor: '#f8fafc' }}>
@@ -799,7 +806,8 @@ const DatabasePageContent: React.FC = () => {
                                       style={{
                                         padding: '0.875rem 1rem',
                                         fontSize: '0.875rem',
-                                        color: '#1e293b',
+                                        color: '#475569',
+                                        borderBottom: '1px solid #e2e8f0',
                                         maxWidth: '300px',
                                         overflow: 'hidden',
                                         textOverflow: 'ellipsis',
