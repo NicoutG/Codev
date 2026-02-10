@@ -35,6 +35,8 @@ const IndicatorCreateContent: React.FC = () => {
   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
   const [executionError, setExecutionError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showJson, setShowJson] = useState(false);
+
 
   function addColumn() {
     setIndicator({
@@ -374,6 +376,46 @@ const IndicatorCreateContent: React.FC = () => {
                 )}
               </div>
             )}
+            <div style={pageStyles.indicator.formSection}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.5rem'
+              }}>
+                <h2 style={pageStyles.indicator.sectionTitle}>
+                  JSON généré
+                </h2>
+
+                <button
+                  type="button"
+                  onClick={() => setShowJson(v => !v)}
+                  style={{
+                    ...commonStyles.buttonSmall,
+                    ...commonStyles.buttonSecondary,
+                  }}
+                >
+                  {showJson ? '🙈 Masquer' : '👀 Afficher'}
+                </button>
+              </div>
+
+              {showJson && (
+                <pre
+                  style={{
+                    background: '#0f172a',
+                    color: '#e5e7eb',
+                    padding: '1rem',
+                    borderRadius: '6px',
+                    fontSize: '0.8rem',
+                    overflowX: 'auto',
+                    maxHeight: '400px'
+                  }}
+                >
+                  {JSON.stringify(exportJson, null, 2)}
+                </pre>
+              )}
+            </div>
+
 
             <div style={pageStyles.indicator.actionButtons}>
               <button

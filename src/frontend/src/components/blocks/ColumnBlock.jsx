@@ -15,7 +15,7 @@ export default function ColumnBlock({ value, onChange, onDelete }) {
       onChange({
         type,
         titre: value.titre,
-        expr: { agg: "count" }
+        expr: { agg: "count", conditions: null }
       });
     }
   }
