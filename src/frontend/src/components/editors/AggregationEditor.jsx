@@ -33,7 +33,7 @@ export default function AggregationEditor({ value, onChange }) {
       )}
 
       <TableSelectionEditor
-        value={value.subject || { tables: [], condition: null }}
+        value={value.subject || { tables: [], conditions: null }}
         onChange={subject =>
           onChange({ ...value, subject })
         }

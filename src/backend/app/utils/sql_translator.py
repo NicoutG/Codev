@@ -10,9 +10,9 @@ class JsonToSqlTranslator:
         select_clauses = []
         group_by_clauses = []
 
-        for col in self.spec["colonnes"]:
+        for col in self.spec.get("colonnes", []):
             if col["type"] == "group_by":
-                expr = self._expr(col["expr"])
+                expr = self._expr(col.get("expr"))
                 select_clauses.append(f"{expr} AS \"{col['titre']}\"")
                 group_by_clauses.append(expr)
             elif col["type"] == "case":
@@ -20,7 +20,7 @@ class JsonToSqlTranslator:
                 select_clauses.append(f"{case_sql} AS \"{col['titre']}\"")
                 group_by_clauses.append(case_sql)
             elif col["type"] == "aggregation":
-                expr = self._aggregation_expr(col["expr"])
+                expr = self._aggregation_expr(col.get("expr", {}))
                 select_clauses.append(f"{expr} AS \"{col['titre']}\"")
 
         from_clause = self._from()
@@ -38,7 +38,9 @@ class JsonToSqlTranslator:
 
     # ---------- FROM / WHERE ----------
     def _from(self) -> str:
-        tables = self.spec["sujet"]["tables"]
+        tables = self.spec.get("sujet", {}).get("tables", [])
+        if not tables:
+            raise ValueError("Aucune table dans le sujet")
         if len(tables) == 1:
             return f"FROM {tables[0]}"
         join_sql = tables[0]
@@ -47,7 +49,7 @@ class JsonToSqlTranslator:
         return "FROM " + join_sql
 
     def _where(self) -> str | None:
-        conditions = self.spec["sujet"].get("conditions")
+        conditions = self.spec.get("sujet", {}).get("conditions")
         if not conditions:
             return None
         return "WHERE " + self._condition(conditions)
@@ -76,40 +78,42 @@ class JsonToSqlTranslator:
 
     # ---------- AGGREGATIONS ----------
     def _aggregation_expr(self, expr: dict) -> str:
+        if not expr:
+            return "NULL"
+
         if "op" in expr:
             args = [
                 self._aggregation_expr(arg) if isinstance(arg, dict) else self._expr(arg)
-                for arg in expr["args"]
+                for arg in expr.get("args", [])
             ]
             op = expr["op"]
             if op == "/" and len(args) == 2 and args[0].replace(".", "", 1).isdigit() and float(args[0]) == 100:
                 args[0] = "100.0"
             return "(" + f" {op} ".join(args) + ")"
+
         elif "agg" in expr:
             return self._aggregation(expr)
+
         else:
             return self._expr(expr)
 
     def _aggregation(self, agg: dict) -> str:
-        func = agg["agg"].upper()
+        func = agg.get("agg", "").upper()
         col = agg.get("col", "1")
 
-        subject = agg.get("subject")
-        if subject:
-            tables = subject.get("tables", [])
-            conditions = subject.get("conditions")
+        subject = agg.get("subject") or {}
+        tables = subject.get("tables", [])
+        conditions = subject.get("conditions")
+
+        if tables:
             from_clause = ", ".join(tables)
-            where_clause = ""
-            if conditions:
-                where_clause = " WHERE " + self._condition(conditions)
+            where_clause = f" WHERE {self._condition(conditions)}" if conditions else ""
             return f"(SELECT {func}({col}) FROM {from_clause}{where_clause})"
 
-        condition = agg.get("condition")
-        if not condition or condition == []:
-            # Aucun filtre → COUNT(1) ou autre agrégat simple
+        condition = agg.get("condition") or None
+        if not condition:
             return f"{func}({col})"
 
-        # Agrégation avec condition
         cond_sql = self._condition(condition)
         return f"{func}(CASE WHEN {cond_sql} THEN {col} END)"
 
@@ -127,11 +131,11 @@ class JsonToSqlTranslator:
         return " ".join(parts)
 
     # ---------- CONDITIONS ----------
-    def _condition(self, cond: dict) -> str:
+    def _condition(self, cond) -> str:
         if not cond:
-            return "1=1"  # Pas de condition → vrai
+            return "1=1"
+
         if isinstance(cond, list):
-            # Liste vide ou liste de conditions → AND
             if not cond:
                 return "1=1"
             return "(" + " AND ".join(self._condition(c) for c in cond) + ")"

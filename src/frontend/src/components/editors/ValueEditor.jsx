@@ -64,8 +64,7 @@ export default function ValueEditor({ value, onChange }) {
       case "aggregation":
         onChange({
           agg: "count",
-          subject: { tables: [] },
-          condition: null,
+          subject: { tables: [] , conditions: null},
         });
         break;
       default:
