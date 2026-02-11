@@ -3,7 +3,7 @@ import { TableProvider } from "../../contexts/TableContext";
 import ConditionEditor from "./ConditionEditor";
 import { metadataApi } from "../../api/metadata";
 
-export default function TableSelectionEditor({ value, onChange }) {
+export default function TableSelectionEditor({ value, onChange, isSubjectSection = false }) {
   const tables = value?.tables || [];
   const conditions = value?.conditions ?? null;
 
@@ -11,6 +11,9 @@ export default function TableSelectionEditor({ value, onChange }) {
   const [tableColumnsMap, setTableColumnsMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // état local pour le checkbox Sujet (affichage seulement)
+  const [subjectChecked, setSubjectChecked] = useState(!isSubjectSection && tables.length === 0);
 
   // Charger les tables et leurs colonnes
   useEffect(() => {
@@ -20,17 +23,20 @@ export default function TableSelectionEditor({ value, onChange }) {
       setLoading(true);
       setError(null);
       try {
-        const tables = await metadataApi.listTables();
+        const tablesList = await metadataApi.listTables();
         if (cancelled) return;
-        setAvailableTables(tables);
+
+        // Ajouter Sujet uniquement si on n'est pas dans la section sujet
+        const allTables = isSubjectSection ? tablesList : tablesList;
+        setAvailableTables(allTables);
 
         // Charger les colonnes de toutes les tables
         const colsMap = {};
-        for (const t of tables) {
+        for (const t of tablesList) {
           const cols = await metadataApi.listColumnsForTables([t]);
           colsMap[t] = new Set(cols);
         }
-        if (!cancelled) setTableColumnsMap(colsMap);
+        setTableColumnsMap(colsMap);
       } catch (e) {
         if (!cancelled) setError("Impossible de charger les tables");
       } finally {
@@ -42,24 +48,31 @@ export default function TableSelectionEditor({ value, onChange }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isSubjectSection]);
 
   const toggleTable = (table) => {
     const hasIdPolytech = tableColumnsMap[table]?.has("id_polytech") ?? false;
 
     if (!tables.includes(table)) {
-      // On coche la table
       let nextTables;
-      if (hasIdPolytech) {
-        // Si la table contient id_polytech, garder seulement les tables qui contiennent id_polytech
-        nextTables = [...tables.filter(t => tableColumnsMap[t]?.has("id_polytech")), table];
+
+      if (!isSubjectSection && table === "Sujet") {
+        // coche Sujet → décocher toutes les autres tables (affichage)
+        setSubjectChecked(true);
+        nextTables = [];
+      } else if (!isSubjectSection && subjectChecked) {
+        // coche une table → décocher Sujet
+        setSubjectChecked(false);
+        nextTables = [table];
+      } else if (hasIdPolytech) {
+        nextTables = [...tables.filter((t) => tableColumnsMap[t]?.has("id_polytech")), table];
       } else {
-        // Si la table ne contient pas id_polytech, décocher toutes les autres tables
         nextTables = [table];
       }
+
       onChange({ ...value, tables: nextTables });
     } else {
-      // On décoche la table simplement
+      // Décoche table
       onChange({ ...value, tables: tables.filter((t) => t !== table) });
     }
   };
@@ -73,6 +86,17 @@ export default function TableSelectionEditor({ value, onChange }) {
 
         {!loading && !error && (
           <div style={{ display: "flex", flexDirection: "column", marginTop: 4 }}>
+            {!isSubjectSection && (
+              <label style={{ display: "flex", gap: 4 }}>
+                <input
+                  type="checkbox"
+                  checked={subjectChecked}
+                  onChange={() => toggleTable("Sujet")}
+                />
+                Sujet
+              </label>
+            )}
+
             {availableTables.map((t) => (
               <label key={t} style={{ display: "flex", gap: 4 }}>
                 <input
