@@ -8,18 +8,29 @@ export default function TableSelectionEditor({ value, onChange }) {
   const conditions = value?.conditions ?? null;
 
   const [availableTables, setAvailableTables] = useState([]);
+  const [tableColumnsMap, setTableColumnsMap] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Charger les tables et leurs colonnes
   useEffect(() => {
     let cancelled = false;
 
-    async function loadTables() {
+    async function loadTablesAndColumns() {
       setLoading(true);
       setError(null);
       try {
-        const data = await metadataApi.listTables();
-        if (!cancelled) setAvailableTables(data);
+        const tables = await metadataApi.listTables();
+        if (cancelled) return;
+        setAvailableTables(tables);
+
+        // Charger les colonnes de toutes les tables
+        const colsMap = {};
+        for (const t of tables) {
+          const cols = await metadataApi.listColumnsForTables([t]);
+          colsMap[t] = new Set(cols);
+        }
+        if (!cancelled) setTableColumnsMap(colsMap);
       } catch (e) {
         if (!cancelled) setError("Impossible de charger les tables");
       } finally {
@@ -27,17 +38,30 @@ export default function TableSelectionEditor({ value, onChange }) {
       }
     }
 
-    loadTables();
+    loadTablesAndColumns();
     return () => {
       cancelled = true;
     };
   }, []);
 
   const toggleTable = (table) => {
-    const nextTables = tables.includes(table)
-      ? tables.filter((t) => t !== table)
-      : [...tables, table];
-    onChange({ ...value, tables: nextTables });
+    const hasIdPolytech = tableColumnsMap[table]?.has("id_polytech") ?? false;
+
+    if (!tables.includes(table)) {
+      // On coche la table
+      let nextTables;
+      if (hasIdPolytech) {
+        // Si la table contient id_polytech, garder seulement les tables qui contiennent id_polytech
+        nextTables = [...tables.filter(t => tableColumnsMap[t]?.has("id_polytech")), table];
+      } else {
+        // Si la table ne contient pas id_polytech, décocher toutes les autres tables
+        nextTables = [table];
+      }
+      onChange({ ...value, tables: nextTables });
+    } else {
+      // On décoche la table simplement
+      onChange({ ...value, tables: tables.filter((t) => t !== table) });
+    }
   };
 
   return (
