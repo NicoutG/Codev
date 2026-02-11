@@ -45,7 +45,7 @@ class JsonToSqlTranslator:
             return f"FROM {tables[0]}"
         join_sql = tables[0]
         for t in tables[1:]:
-            join_sql = f"{join_sql} JOIN {t} ON {tables[0]}.idEtudiant = {t}.idEtudiant"
+            join_sql = f"{join_sql} JOIN {t} ON {tables[0]}.id_polytech = {t}.id_polytech"
         return "FROM " + join_sql
 
     def _where(self) -> str | None:

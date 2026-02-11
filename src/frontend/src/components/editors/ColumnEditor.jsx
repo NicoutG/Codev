@@ -9,15 +9,15 @@ export default function ColumnEditor({ value, onChange }) {
 
   const [columns, setColumns] = useState([]);
 
-  // Détermine les tables à utiliser : TableContext > subject global
+  // Tables prioritaires : TableContext > subject global
   const tablesToLoad = useMemo(() => {
     if (ctx?.effectiveTables?.length > 0) return ctx.effectiveTables;
     return sujet?.tables || [];
   }, [ctx?.effectiveTables, sujet?.tables]);
 
+  // Clé stable pour déclencher le useEffect
   const tablesKey = useMemo(() => {
     if (!tablesToLoad || tablesToLoad.length === 0) return "";
-    // key stable
     return Array.from(new Set(tablesToLoad)).sort().join(",");
   }, [tablesToLoad]);
 
@@ -32,17 +32,33 @@ export default function ColumnEditor({ value, onChange }) {
 
       try {
         const cols = await metadataApi.listColumnsForTables(tablesToLoad);
-        if (!cancelled) setColumns(cols);
+        if (!cancelled) {
+          const normalized = Array.isArray(cols)
+            ? cols.map((c) => String(c))
+            : [];
+          setColumns(normalized);
+
+          // Si value.col vide, on définit automatiquement le premier de la liste
+          if ((!value || !value.col) && normalized.length > 0) {
+            onChange({ ...(value || {}), col: normalized[0] });
+          }
+        }
       } catch {
         if (!cancelled) setColumns([]);
       }
     }
 
     loadColumns();
+
     return () => {
       cancelled = true;
     };
-  }, [tablesKey]);
+  }, [tablesKey]); // dépend uniquement de la clé stable
+
+  // Tri non destructif
+  const sortedColumns = useMemo(() => {
+    return [...columns].sort((a, b) => a.localeCompare(b));
+  }, [columns]);
 
   return (
     <select
@@ -52,7 +68,8 @@ export default function ColumnEditor({ value, onChange }) {
       <option value="" disabled>
         -- choisir une colonne --
       </option>
-      {columns.sort().map((c) => (
+
+      {sortedColumns.map((c) => (
         <option key={c} value={c}>
           {c}
         </option>
