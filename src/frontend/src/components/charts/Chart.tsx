@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BarChart,
   LineChart,
@@ -22,10 +22,12 @@ interface ChartProps {
   data: any[];
   columns: string[];
   title?: string;
-  config?: any;
+  config?: {
+    pieValueKey?: string;   // si m>1, choisir quelle colonne numérique alimente le pie
+    maxCharts?: number;     // garde-fou si TOUT génère trop de graphiques
+  };
 }
 
-// Couleurs pour les graphiques
 const COLORS = [
   '#3b82f6', // blue
   '#10b981', // green
@@ -36,6 +38,9 @@ const COLORS = [
   '#06b6d4', // cyan
   '#84cc16', // lime
 ];
+
+const SEL_ALL = '-- TOUT --';
+const SEL_IGNORE = '-- IGNORER --';
 
 function isNumericLike(value: any): boolean {
   if (value === null || value === undefined) return false;
@@ -55,21 +60,35 @@ function toNumberSafe(value: any): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function hashString(str: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
+}
+
+function colorForKey(key: string): string {
+  const idx = hashString(key) % COLORS.length;
+  return COLORS[idx];
+}
+
+function formatLabelValue(v: any): string {
+  const s = String(v ?? '').trim();
+  return s === '' ? 'N/A' : s;
+}
+
 /**
- * Détecte combien de colonnes "label" on a au début, avant la/les colonnes numériques.
- * Ex:
- *  - [label, nb] => 1
- *  - [label1, label2, nb] => 2
- *  - [label1, label2, nb1, nb2] => 2
+ * Détecte n colonnes labels au début, puis m colonnes numériques.
  */
 function detectLeadingLabelColumnCount(rows: any[], cols: string[]): number {
-  const sample = rows.slice(0, 15);
+  const sample = rows.slice(0, 20);
   let labelCount = 0;
 
   for (let i = 0; i < cols.length; i++) {
     const col = cols[i];
 
-    // Une colonne est considérée numérique si TOUS les values non vides du sample sont numeric-like
     const nonEmpty = sample
       .map(r => r?.[col])
       .filter(v => v !== null && v !== undefined && String(v).trim() !== '');
@@ -80,12 +99,22 @@ function detectLeadingLabelColumnCount(rows: any[], cols: string[]): number {
     labelCount++;
   }
 
-  return Math.min(labelCount, 2);
+  return Math.min(labelCount, cols.length);
+}
+
+type SelectionMap = Record<string, string>;
+
+type ChartGroup = {
+  key: string;
+  title: string;
+  rows: any[];
+};
+
+function buildTitle(parts: Array<{ key: string; value: string }>) {
+  return parts.map(p => `${p.key}=${p.value}`).join(' | ');
 }
 
 export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config }) => {
-  const [twoLabelViewMode, setTwoLabelViewMode] = useState<'all' | 'select'>('all'); // NEW
-
   if (!data || data.length === 0) {
     return (
       <div style={{
@@ -105,17 +134,160 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
     );
   }
 
-  const labelCount = detectLeadingLabelColumnCount(data, columns);
-  const isTwoLabelMode = labelCount >= 2 && columns.length >= 3;
+  const labelCount = useMemo(() => detectLeadingLabelColumnCount(data, columns), [data, columns]);
+  const labelCols = useMemo(() => columns.slice(0, labelCount), [columns, labelCount]);
+  const numericCols = useMemo(() => columns.slice(labelCount), [columns, labelCount]);
 
-  // --- Helpers pour rendre un chart (utilisé par les deux modes) ---
-  const renderOneChart = (
-    chartType: ChartProps['type'],
-    chartData: any[],
-    pieData: any[],
-    valueCols: string[]
-  ) => {
-    switch (chartType) {
+  // Cas flat : 1 label + m numériques (comportement normal)
+  const isHierarchical = labelCols.length >= 2 && numericCols.length >= 1;
+
+  // Pour le mode hierarchical :
+  // - selects = tous les labels sauf le dernier (catégories)
+  const filterLabelCols = useMemo(() => {
+    if (!isHierarchical) return [];
+    return labelCols.slice(0, labelCols.length - 1);
+  }, [isHierarchical, labelCols]);
+
+  const categoryLabelCol = useMemo(() => {
+    if (!isHierarchical) return '';
+    return labelCols[labelCols.length - 1];
+  }, [isHierarchical, labelCols]);
+
+  const pieValueKey = useMemo(() => {
+    if (!numericCols.length) return '';
+    const wanted = config?.pieValueKey;
+    if (wanted && numericCols.includes(wanted)) return wanted;
+    return numericCols[0];
+  }, [numericCols, config?.pieValueKey]);
+
+  // ===== Selections (avec IGNORER / TOUT) =====
+  const [selections, setSelections] = useState<SelectionMap>({});
+
+  // Init : par défaut on met la 1ère valeur dispo (comme ton UX actuelle),
+  // mais tu peux changer en SEL_ALL si tu veux démarrer en "tout"
+  useEffect(() => {
+    if (!isHierarchical) return;
+
+    const next: SelectionMap = {};
+    let workingRows = data.slice();
+
+    for (const col of filterLabelCols) {
+      const values = Array.from(new Set(workingRows.map(r => formatLabelValue(r?.[col]))))
+        .sort((a, b) => a.localeCompare(b, 'fr'));
+
+      // valeur par défaut : première valeur réelle si dispo, sinon N/A
+      const chosen = values[0] ?? 'N/A';
+      next[col] = chosen;
+
+      // cascade sur valeur choisie (si on initialise sur une valeur)
+      workingRows = workingRows.filter(r => formatLabelValue(r?.[col]) === chosen);
+    }
+
+    setSelections(next);
+  }, [isHierarchical, filterLabelCols, data, labelCols.join('|'), numericCols.join('|')]);
+
+  // Options de select (cascadées) + ajout de TOUT/IGNORER
+  const selectOptionsByCol = useMemo(() => {
+    if (!isHierarchical) return {} as Record<string, string[]>;
+
+    const result: Record<string, string[]> = {};
+
+    for (let i = 0; i < filterLabelCols.length; i++) {
+      const col = filterLabelCols[i];
+
+      // On cascade seulement sur les colonnes précédentes
+      // si elles sont fixées à une valeur (ni TOUT ni IGNORER)
+      let rows = data.slice();
+      for (let j = 0; j < i; j++) {
+        const prevCol = filterLabelCols[j];
+        const sel = selections[prevCol];
+        if (sel && sel !== SEL_ALL && sel !== SEL_IGNORE) {
+          rows = rows.filter(r => formatLabelValue(r?.[prevCol]) === sel);
+        }
+      }
+
+      const values = Array.from(new Set(rows.map(r => formatLabelValue(r?.[col]))))
+        .sort((a, b) => a.localeCompare(b, 'fr'));
+
+      result[col] = [SEL_ALL, SEL_IGNORE, ...values];
+    }
+
+    return result;
+  }, [isHierarchical, filterLabelCols, data, selections]);
+
+  // Quand un select change :
+  // - on met la valeur
+  // - et on "répare" les selects suivants si leurs valeurs ne sont plus valides
+  const handleSelectChange = (col: string, value: string) => {
+    setSelections(prev => {
+      const next = { ...prev, [col]: value };
+
+      const idx = filterLabelCols.indexOf(col);
+      if (idx >= 0) {
+        for (let i = idx + 1; i < filterLabelCols.length; i++) {
+          const c = filterLabelCols[i];
+
+          // Recompute options for c based on previous fixed selections
+          let rows = data.slice();
+          for (let j = 0; j < i; j++) {
+            const pc = filterLabelCols[j];
+            const sel = next[pc];
+            if (sel && sel !== SEL_ALL && sel !== SEL_IGNORE) {
+              rows = rows.filter(r => formatLabelValue(r?.[pc]) === sel);
+            }
+          }
+
+          const values = Array.from(new Set(rows.map(r => formatLabelValue(r?.[c]))))
+            .sort((a, b) => a.localeCompare(b, 'fr'));
+
+          const allowed = new Set([SEL_ALL, SEL_IGNORE, ...values]);
+
+          const current = next[c];
+          if (!current || !allowed.has(current)) {
+            // Si on perd la valeur, on retombe sur une valeur réelle si possible, sinon IGNORER
+            next[c] = values[0] ?? SEL_IGNORE;
+          }
+        }
+      }
+
+      return next;
+    });
+  };
+
+  // ===== Préparation données pour un chart : aggregation sur la catégorie =====
+  const prepareChartData = (rows: any[]) => {
+    const map = new Map<string, any>();
+
+    rows.forEach(r => {
+      const cat = formatLabelValue(r?.[categoryLabelCol]);
+      if (!map.has(cat)) {
+        const base: any = { name: cat };
+        numericCols.forEach(nc => (base[nc] = 0));
+        map.set(cat, base);
+      }
+      const acc = map.get(cat)!;
+      numericCols.forEach(nc => {
+        acc[nc] += toNumberSafe(r?.[nc]);
+      });
+    });
+
+    const chartData = Array.from(map.values()).sort((a, b) =>
+      String(a.name).localeCompare(String(b.name), 'fr')
+    );
+
+    const pieData = chartData.map(d => ({
+      name: String(d.name),
+      value: toNumberSafe(d?.[pieValueKey]),
+    }));
+
+    return { chartData, pieData };
+  };
+
+  // ===== Rendu d’un chart (bar/line/area/pie) =====
+  const renderOneChart = (rows: any[]) => {
+    const { chartData, pieData } = prepareChartData(rows);
+
+    switch (type) {
       case 'bar':
         return (
           <ResponsiveContainer width="100%" height={320}>
@@ -123,20 +295,18 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
               <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  padding: '8px'
-                }}
-              />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              {valueCols.map((col, idx) => (
+              {numericCols.map((col) => (
                 <Bar
                   key={col}
                   dataKey={col}
-                  fill={COLORS[idx % COLORS.length]}
+                  fill={colorForKey(`series:${col}`)}
                   name={col}
                   radius={[4, 4, 0, 0]}
                 />
@@ -152,21 +322,19 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
               <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
               <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  padding: '8px'
-                }}
-              />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
               <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              {valueCols.map((col, idx) => (
+              {numericCols.map((col) => (
                 <Line
                   key={col}
                   type="monotone"
                   dataKey={col}
-                  stroke={COLORS[idx % COLORS.length]}
+                  stroke={colorForKey(`series:${col}`)}
                   strokeWidth={2}
                   name={col}
                   dot={{ r: 4 }}
@@ -174,6 +342,35 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
                 />
               ))}
             </LineChart>
+          </ResponsiveContainer>
+        );
+
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={320}>
+            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              {numericCols.map((col) => (
+                <Area
+                  key={col}
+                  type="monotone"
+                  dataKey={col}
+                  stroke={colorForKey(`series:${col}`)}
+                  fill={colorForKey(`series:${col}`)}
+                  fillOpacity={0.6}
+                  name={col}
+                />
+              ))}
+            </AreaChart>
           </ResponsiveContainer>
         );
 
@@ -193,51 +390,21 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
                 fill="#8884d8"
                 dataKey="value"
               >
-                {pieData.map((_: any, index: number) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                {pieData.map((entry: any, index: number) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colorForKey(`label:${categoryLabelCol}:${String(entry.name)}`)}
+                  />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  padding: '8px'
-                }}
-              />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
               <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
             </PieChart>
-          </ResponsiveContainer>
-        );
-
-      case 'area':
-        return (
-          <ResponsiveContainer width="100%" height={320}>
-            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
-              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  padding: '8px'
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-              {valueCols.map((col, idx) => (
-                <Area
-                  key={col}
-                  type="monotone"
-                  dataKey={col}
-                  stroke={COLORS[idx % COLORS.length]}
-                  fill={COLORS[idx % COLORS.length]}
-                  fillOpacity={0.6}
-                  name={col}
-                />
-              ))}
-            </AreaChart>
           </ResponsiveContainer>
         );
 
@@ -246,84 +413,217 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
     }
   };
 
-  // --- Mode 2 labels ---
-  const twoLabelGroups = useMemo(() => {
-    if (!isTwoLabelMode) return [];
+  // ===== Mode flat (1 label + m numériques) inchangé =====
+  const renderFlatChart = () => {
+    const xCol = columns[0];
+    const series = columns.slice(1);
 
-    const groupCol = columns[0];
-    const categoryCol = columns[1];
-    const valueCols = columns.slice(labelCount);
-
-    const groupsMap = new Map<string, any[]>();
-    data.forEach((row) => {
-      const g = String(row?.[groupCol] ?? 'N/A').trim() || 'N/A';
-      if (!groupsMap.has(g)) groupsMap.set(g, []);
-      groupsMap.get(g)!.push(row);
-    });
-
-    const groups = Array.from(groupsMap.entries()).map(([groupName, rows]) => {
-      const chartData = rows.map((row) => {
-        const result: any = {};
-        result.name = String(row?.[categoryCol] ?? 'N/A').trim() || 'N/A';
-        valueCols.forEach((col) => {
-          result[col] = toNumberSafe(row?.[col]);
-        });
-        return result;
-      });
-
-      const pieValueCol = valueCols[0];
-      const pieData = rows.map((row, idx) => ({
-        name: String(row?.[categoryCol] ?? `Catégorie ${idx + 1}`).trim() || 'N/A',
-        value: toNumberSafe(row?.[pieValueCol]),
-      }));
-
-      return { groupName, chartData, pieData, valueCols };
-    });
-
-    // Tri stable pour un affichage plus propre
-    groups.sort((a, b) => a.groupName.localeCompare(b.groupName, 'fr'));
-
-    return groups;
-  }, [isTwoLabelMode, data, columns, labelCount]);
-
-  const [selectedGroupName, setSelectedGroupName] = useState<string>('');
-
-  // Sync sélection par défaut quand on arrive en mode select / quand les groups changent
-  React.useEffect(() => {
-    if (!isTwoLabelMode) return;
-
-    if (twoLabelViewMode === 'select') {
-      const first = twoLabelGroups[0]?.groupName || '';
-      setSelectedGroupName((prev) => prev || first);
-    }
-  }, [isTwoLabelMode, twoLabelGroups, twoLabelViewMode]);
-
-  // --- Mode normal (1 label + N valeurs) ---
-  const chartData = useMemo(() => {
-    return data.map((row) => {
+    const chartData = data.map((row) => {
       const result: any = {};
-      if (columns[0]) {
-        result.name = String(row[columns[0]] || 'N/A');
-      }
-      columns.slice(1).forEach((col) => {
-        result[col] = toNumberSafe(row?.[col]);
-      });
+      result.name = formatLabelValue(row?.[xCol]);
+      series.forEach((c) => (result[c] = toNumberSafe(row?.[c])));
       return result;
     });
-  }, [data, columns]);
 
-  const pieData = useMemo(() => {
-    return data.map((row, idx) => ({
-      name: String(row[columns[0]] || `Catégorie ${idx + 1}`),
-      value: toNumberSafe(row?.[columns[1]])
+    const pieKey = (config?.pieValueKey && series.includes(config.pieValueKey))
+      ? config.pieValueKey
+      : (series[0] ?? '');
+
+    const pieData = chartData.map((d) => ({
+      name: String(d.name),
+      value: toNumberSafe(d?.[pieKey]),
     }));
-  }, [data, columns]);
 
-  const renderNormalChart = () => {
-    return renderOneChart(type, chartData, pieData, columns.slice(1));
+    switch (type) {
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              {series.map((col) => (
+                <Bar
+                  key={col}
+                  dataKey={col}
+                  fill={colorForKey(`series:${col}`)}
+                  name={col}
+                  radius={[4, 4, 0, 0]}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        );
+
+      case 'line':
+        return (
+          <ResponsiveContainer width="100%" height={350}>
+            <LineChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              {series.map((col) => (
+                <Line
+                  key={col}
+                  type="monotone"
+                  dataKey={col}
+                  stroke={colorForKey(`series:${col}`)}
+                  strokeWidth={2}
+                  name={col}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        );
+
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={350}>
+            <AreaChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#64748b" style={{ fontSize: '12px' }} />
+              <YAxis stroke="#64748b" style={{ fontSize: '12px' }} />
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
+              <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+              {series.map((col) => (
+                <Area
+                  key={col}
+                  type="monotone"
+                  dataKey={col}
+                  stroke={colorForKey(`series:${col}`)}
+                  fill={colorForKey(`series:${col}`)}
+                  fillOpacity={0.6}
+                  name={col}
+                />
+              ))}
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+
+      case 'pie':
+        return (
+          <ResponsiveContainer width="100%" height={350}>
+            <PieChart>
+              <Pie
+                data={pieData}
+                cx="50%"
+                cy="50%"
+                labelLine={false}
+                label={({ name, percent }: any) =>
+                  percent > 0.05 ? `${name}: ${(percent * 100).toFixed(0)}%` : ''
+                }
+                outerRadius={100}
+                fill="#8884d8"
+                dataKey="value"
+              >
+                {pieData.map((entry: any, index: number) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={colorForKey(`label:${xCol}:${String(entry.name)}`)}
+                  />
+                ))}
+              </Pie>
+              <Tooltip contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '8px'
+              }} />
+              <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px' }} />
+            </PieChart>
+          </ResponsiveContainer>
+        );
+
+      default:
+        return <div>Type de graphique non supporté</div>;
+    }
   };
 
-  // --- UI toggle + rendu ---
+  // ===== Génération des charts selon selections (TOUT / IGNORER / valeur) =====
+  const chartsToRender: ChartGroup[] = useMemo(() => {
+    if (!isHierarchical) return [];
+
+    const maxCharts = config?.maxCharts ?? 200;
+
+    // Colonnes fixées (valeur précise)
+    const fixedCols = filterLabelCols.filter(c => {
+      const sel = selections[c];
+      return sel && sel !== SEL_ALL && sel !== SEL_IGNORE;
+    });
+
+    // Colonnes split (TOUT)
+    const splitCols = filterLabelCols.filter(c => selections[c] === SEL_ALL);
+
+    // IGNORER : on ne fait rien de spécial, ça veut juste dire "ne pas fixer et ne pas split"
+    // => ces colonnes seront automatiquement agrégées par le prepareChartData.
+
+    // Base rows filtrées par fixed only
+    let baseRows = data.slice();
+    for (const c of fixedCols) {
+      const v = selections[c];
+      baseRows = baseRows.filter(r => formatLabelValue(r?.[c]) === v);
+    }
+
+    if (splitCols.length === 0) {
+      // 1 seul chart
+      const fixedParts = fixedCols.map(c => ({ key: c, value: selections[c] }));
+      const t = fixedParts.length ? buildTitle(fixedParts) : 'Tous';
+
+      return [{
+        key: t,
+        title: t,
+        rows: baseRows
+      }];
+    }
+
+    // Sinon: group by splitCols combination
+    const groupsMap = new Map<string, { title: string; rows: any[] }>();
+
+    for (const r of baseRows) {
+      const parts = splitCols.map(c => ({ key: c, value: formatLabelValue(r?.[c]) }));
+      const comboTitle = buildTitle(parts);
+      const key = comboTitle || 'Tous';
+
+      if (!groupsMap.has(key)) {
+        // Titre complet = fixed (si tu veux les afficher) + split
+        const fixedParts = fixedCols.map(c => ({ key: c, value: selections[c] }));
+        const fullTitle = buildTitle([...fixedParts, ...parts]);
+        groupsMap.set(key, { title: fullTitle || key, rows: [] });
+      }
+      groupsMap.get(key)!.rows.push(r);
+    }
+
+    // Tri stable + limite
+    const groups = Array.from(groupsMap.entries())
+      .sort((a, b) => a[0].localeCompare(b[0], 'fr'))
+      .slice(0, maxCharts)
+      .map(([k, v]) => ({ key: k, title: v.title, rows: v.rows }));
+
+    return groups;
+  }, [isHierarchical, data, filterLabelCols, selections, config?.maxCharts]);
+
+  // ===== Render =====
   return (
     <div style={{
       padding: '1.5rem',
@@ -331,175 +631,152 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
       borderRadius: '8px',
       border: '1px solid #e2e8f0'
     }}>
-      {(title || isTwoLabelMode) && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '1rem',
-          marginBottom: '1rem',
-          flexWrap: 'wrap'
-        }}>
-          {title ? (
-            <h3 style={{
-              fontSize: '1rem',
-              fontWeight: '600',
-              color: '#1e293b',
-              margin: 0
-            }}>
-              {title}
-            </h3>
-          ) : <div />}
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        marginBottom: isHierarchical ? '1rem' : '0.75rem',
+        flexWrap: 'wrap'
+      }}>
+        {title && (
+          <h3 style={{
+            fontSize: '1rem',
+            fontWeight: '600',
+            color: '#1e293b',
+            margin: 0
+          }}>
+            {title}
+          </h3>
+        )}
 
-          {isTwoLabelMode && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem'
-            }}>
-              <span style={{ fontSize: '0.8125rem', color: '#64748b' }}>
-                {twoLabelViewMode === 'all' ? 'Tous les graphiques' : 'Sélection'}
+        {isHierarchical && (
+          <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+            Catégories : <span style={{ color: '#334155', fontWeight: 600 }}>{categoryLabelCol}</span>
+            {type === 'pie' && numericCols.length > 1 && (
+              <span style={{ marginLeft: '0.5rem' }}>
+                (camembert basé sur <b>{pieValueKey}</b>)
               </span>
+            )}
+          </div>
+        )}
+      </div>
 
-              <button
-                type="button"
-                onClick={() => setTwoLabelViewMode(prev => (prev === 'all' ? 'select' : 'all'))}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: twoLabelViewMode === 'all' ? '#f1f5f9' : '#e0e7ff',
-                  color: twoLabelViewMode === 'all' ? '#334155' : '#1e40af',
-                  cursor: 'pointer',
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                {twoLabelViewMode === 'all' ? '🔽 Passer en sélection' : '📊 Tout afficher'}
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {isTwoLabelMode ? (
-        twoLabelViewMode === 'select' ? (
-          <>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              marginBottom: '1rem',
-              flexWrap: 'wrap'
-            }}>
-              <label style={{
-                fontSize: '0.875rem',
-                color: '#64748b',
-                fontWeight: 500
-              }}>
-                Choisir :
-              </label>
-
-              <select
-                value={selectedGroupName}
-                onChange={(e) => setSelectedGroupName(e.target.value)}
-                style={{
-                  padding: '0.6rem 0.75rem',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  backgroundColor: 'white',
-                  color: '#0f172a',
-                  fontSize: '0.9rem',
-                  minWidth: '220px',
-                  outline: 'none'
-                }}
-              >
-                {twoLabelGroups.map(g => (
-                  <option key={g.groupName} value={g.groupName}>
-                    {g.groupName}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {(() => {
-              const g = twoLabelGroups.find(x => x.groupName === selectedGroupName) || twoLabelGroups[0];
-              if (!g) {
-                return (
-                  <div style={{
-                    padding: '2rem',
-                    backgroundColor: '#f8fafc',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    textAlign: 'center'
-                  }}>
-                    <p style={{ color: '#64748b' }}>Aucune donnée à afficher</p>
-                  </div>
-                );
-              }
-
-              return (
-                <div style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '1rem',
-                  backgroundColor: '#ffffff'
-                }}>
-                  <div style={{
-                    fontSize: '0.95rem',
-                    fontWeight: 600,
-                    color: '#0f172a',
-                    marginBottom: '0.75rem'
-                  }}>
-                    {g.groupName}
-                  </div>
-
-                  {renderOneChart(type, g.chartData, g.pieData, g.valueCols)}
-                </div>
-              );
-            })()}
-          </>
-        ) : (
+      {/* Mode hierarchical */}
+      {isHierarchical ? (
+        <>
+          {/* Selects */}
           <div style={{
             display: 'flex',
             flexWrap: 'wrap',
-            gap: '1rem'
+            gap: '0.75rem',
+            marginBottom: '1rem',
+            alignItems: 'center'
           }}>
-            {twoLabelGroups.map((g) => (
-              <div
-                key={g.groupName}
-                style={{
-                  flex: '1 1 420px',
-                  minWidth: '320px',
+            {filterLabelCols.map((col) => {
+              const opts = selectOptionsByCol[col] ?? [SEL_ALL, SEL_IGNORE];
+              const val = selections[col] ?? (opts.includes(SEL_ALL) ? SEL_ALL : (opts[0] ?? SEL_IGNORE));
+
+              return (
+                <div key={col} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <label style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}>
+                    {col}
+                  </label>
+                  <select
+                    value={val}
+                    onChange={(e) => handleSelectChange(col, e.target.value)}
+                    style={{
+                      padding: '0.6rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #e2e8f0',
+                      backgroundColor: 'white',
+                      color: '#0f172a',
+                      fontSize: '0.9rem',
+                      minWidth: '220px',
+                      outline: 'none'
+                    }}
+                  >
+                    {opts.map(o => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Charts list (1 ou plusieurs selon TOUT) */}
+          {chartsToRender.length === 0 ? (
+            <div style={{
+              padding: '2rem',
+              backgroundColor: '#f8fafc',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0',
+              textAlign: 'center'
+            }}>
+              <p style={{ color: '#64748b' }}>Aucune donnée pour cette sélection</p>
+            </div>
+          ) : chartsToRender.length === 1 ? (
+            renderOneChart(chartsToRender[0].rows)
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {chartsToRender.length >= (config?.maxCharts ?? 200) && (
+                <div style={{
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  backgroundColor: '#fff7ed',
+                  border: '1px solid #fed7aa',
+                  color: '#9a3412',
+                  fontSize: '0.875rem'
+                }}>
+                  Trop de graphiques à afficher : rendu limité à {config?.maxCharts ?? 200}.
+                  (Tu peux ajuster <b>config.maxCharts</b>)
+                </div>
+              )}
+
+              {chartsToRender.map((g) => (
+                <div key={g.key} style={{
                   border: '1px solid #e2e8f0',
                   borderRadius: '10px',
                   padding: '1rem',
                   backgroundColor: '#ffffff'
-                }}
-              >
-                <div style={{
-                  fontSize: '0.95rem',
-                  fontWeight: 600,
-                  color: '#0f172a',
-                  marginBottom: '0.75rem'
                 }}>
-                  {g.groupName}
-                </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'baseline',
+                    gap: '0.75rem',
+                    flexWrap: 'wrap',
+                    marginBottom: '0.75rem'
+                  }}>
+                    <div style={{
+                      fontSize: '0.95rem',
+                      fontWeight: 700,
+                      color: '#0f172a'
+                    }}>
+                      {g.title}
+                    </div>
+                    <div style={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                      {g.rows.length} ligne{g.rows.length > 1 ? 's' : ''} — catégories: {categoryLabelCol}
+                    </div>
+                  </div>
 
-                {renderOneChart(type, g.chartData, g.pieData, g.valueCols)}
-              </div>
-            ))}
-          </div>
-        )
+                  {renderOneChart(g.rows)}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       ) : (
-        renderNormalChart()
+        // Mode flat
+        renderFlatChart()
       )}
     </div>
   );
