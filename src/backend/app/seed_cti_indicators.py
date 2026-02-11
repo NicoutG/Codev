@@ -34,9 +34,9 @@ def create_cti_indicators(db: Session):
                     "conditions": {
                         "or": [
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
-                            {"like": [{"col": "type_etude"}, "%thèse%"]},
-                            {"like": [{"col": "type_etude"}, "%VIE%"]},
-                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                            {"=": [{"col": "type_etude"}, "%thèse%"]},
+                            {"=": [{"col": "type_etude"}, "%VIE%"]},
+                            {"=": [{"col": "situation_mars"}, "%thèse%"]}
                         ]
                     }
                 },
@@ -90,8 +90,8 @@ def create_cti_indicators(db: Session):
                     "conditions": {
                         "or": [
                             {">=": [{"col": "recherche_emploi_depuis"}, "6"]},
-                            {"like": [{"col": "recherche_emploi_depuis"}, "%6 mois%"]},
-                            {"like": [{"col": "recherche_emploi_depuis"}, "%plus de 6%"]}
+                            {"=": [{"col": "recherche_emploi_depuis"}, "%6 mois%"]},
+                            {"=": [{"col": "recherche_emploi_depuis"}, "%plus de 6%"]}
                         ]
                     }
                 },
@@ -148,8 +148,8 @@ def create_cti_indicators(db: Session):
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
                             {
                                 "or": [
-                                    {"like": [{"col": "type_emploi"}, "%CDI%"]},
-                                    {"like": [{"col": "type_emploi"}, "%cdi%"]}
+                                    {"=": [{"col": "type_emploi"}, "%CDI%"]},
+                                    {"=": [{"col": "type_emploi"}, "%cdi%"]}
                                 ]
                             }
                         ]
@@ -185,7 +185,7 @@ def create_cti_indicators(db: Session):
                             {
                                 "or": [
                                     {"=": [{"col": "pays"}, "France"]},
-                                    {"like": [{"col": "pays"}, "%France%"]}
+                                    {"=": [{"col": "pays"}, "%France%"]}
                                 ]
                             }
                         ]
@@ -215,7 +215,7 @@ def create_cti_indicators(db: Session):
                             {
                                 "and": [
                                     {"!=": [{"col": "pays"}, "France"]},
-                                    {"not_like": [{"col": "pays"}, "%France%"]}
+                                    {"!=": [{"col": "pays"}, "%France%"]}
                                 ]
                             }
                         ]
@@ -240,10 +240,10 @@ def create_cti_indicators(db: Session):
                     "tables": ["insertion"],
                     "conditions": {
                         "or": [
-                            {"like": [{"col": "type_etude"}, "%thèse%"]},
-                            {"like": [{"col": "type_etude"}, "%these%"]},
-                            {"like": [{"col": "type_etude"}, "%Thèse%"]},
-                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                            {"=": [{"col": "type_etude"}, "%thèse%"]},
+                            {"=": [{"col": "type_etude"}, "%these%"]},
+                            {"=": [{"col": "type_etude"}, "%Thèse%"]},
+                            {"=": [{"col": "situation_mars"}, "%thèse%"]}
                         ]
                     }
                 },

@@ -174,19 +174,25 @@ class JsonToSqlTranslator:
                     right_expr = f"'{escaped}'"
                 return f"{left_expr} NOT ILIKE {right_expr}"
 
-            # Nouvelle logique : "=" avec % devient ILIKE
-            # Tester BOTH côtés
-            if op in ("=", "=="):
+            # Nouvelle logique : "=" ou "!=" avec % devient ILIKE / NOT ILIKE
+            if op in ("=", "==", "!=", "<>"):
+                is_like = False
                 if isinstance(right, str) and "%" in right:
                     normalized = normalize_text_value(str(right))
                     escaped = normalized.replace("'", "''")
                     right_expr = f"'{escaped}'"
-                    return f"{left_expr} ILIKE {right_expr}"
-                if isinstance(left, str) and "%" in left:
+                    is_like = True
+                elif isinstance(left, str) and "%" in left:
                     normalized = normalize_text_value(str(left))
                     escaped = normalized.replace("'", "''")
                     left_expr = f"'{escaped}'"
-                    return f"{right_expr} ILIKE {left_expr}"
+                    is_like = True
+
+                if is_like:
+                    if op in ("=", "=="):
+                        return f"{left_expr} ILIKE {right_expr}"
+                    elif op in ("!=", "<>"):
+                        return f"{left_expr} NOT ILIKE {right_expr}"
 
             # opérateurs classiques
             if op == "==":
@@ -197,4 +203,5 @@ class JsonToSqlTranslator:
             return f"{left_expr} {op} {right_expr}"
 
         raise ValueError(f"Condition inconnue : {cond}")
+
 

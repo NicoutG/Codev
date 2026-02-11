@@ -19,6 +19,7 @@ export default function CaseEditor({ value, onChange }) {
       ))}
 
       <button
+        type="button"
         onClick={() =>
           onChange([
             ...value,
