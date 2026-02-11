@@ -4,6 +4,7 @@ import ColumnEditor from "./ColumnEditor";
 import { metadataApi } from "../../api/metadata";
 
 const VALUE_TYPES = [
+  { key: "null", label: "Null" },
   { key: "number", label: "Nombre" },
   { key: "boolean", label: "Booléen" },
   { key: "string", label: "Texte" },
@@ -37,6 +38,7 @@ export default function ValueEditor({ value, onChange }) {
   }, [availableTables]);
 
   const getType = () => {
+    if (value === null) return "null";
     if (value?.agg) return "aggregation";
     if (value?.col) return "column";
     if (typeof value === "number") return "number";
@@ -49,24 +51,33 @@ export default function ValueEditor({ value, onChange }) {
 
   const changeType = (t) => {
     switch (t) {
+      case "null":
+        onChange(null);
+        break;
+
       case "number":
         onChange(0);
         break;
+
       case "boolean":
         onChange(true);
         break;
+
       case "string":
         onChange("");
         break;
+
       case "column":
         onChange({ col: defaultTableForColumn });
         break;
+
       case "aggregation":
         onChange({
           agg: "count",
-          subject: { tables: [] , conditions: null},
+          subject: { tables: [], conditions: null },
         });
         break;
+
       default:
         break;
     }
@@ -74,6 +85,13 @@ export default function ValueEditor({ value, onChange }) {
 
   const renderValue = () => {
     switch (type) {
+      case "null":
+        return (
+          <span style={{ fontStyle: "italic", color: "#666" }}>
+            valeur NULL
+          </span>
+        );
+
       case "number":
         return (
           <input
