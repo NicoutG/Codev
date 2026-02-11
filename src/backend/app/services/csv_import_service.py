@@ -89,7 +89,7 @@ class CsvImportService:
         self._dao_by_table = {
             "insertion": ("code", InsertionDao()),
             "etudiants": ("id_polytech", EtudiantsDao()),
-            "mobilite": ("id_polytech_inter", MobiliteDao()),
+            "mobilite": ("id_polytech", MobiliteDao()),
         }
 
         # modèle -> pour détecter Integer/Text

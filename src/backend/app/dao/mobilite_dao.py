@@ -19,14 +19,21 @@ class MobiliteDao:
     
     def upsert(self, db: Session, payload: dict) -> Mobilite:
         """
-        UPSERT PostgreSQL sur la PK: id_polytech_inter
-        payload doit contenir au minimum {"id_polytech_inter": "..."}
+        UPSERT PostgreSQL sur la PK: id_polytech
+        payload doit contenir au minimum {"id_polytech": "..."}
         Utilise une requête SQL brute pour éviter les erreurs de colonnes manquantes.
         """
         from sqlalchemy import text
         
-        if not payload.get("id_polytech_inter"):
-            raise ValueError("Missing required primary key field: id_polytech_inter")
+        if not payload.get("id_polytech"):
+            raise ValueError("Missing required primary key field: id_polytech")
+        
+        # Normalisation id_polytech
+        payload["id_polytech"] = (
+            payload["id_polytech"]
+            .replace("_", "")
+            .replace("inter", "ing")
+        )
 
         # Récupérer les colonnes existantes dans la table
         existing_cols = self._get_existing_columns(db)
@@ -46,13 +53,13 @@ class MobiliteDao:
         columns_clause = ", ".join([f'"{col}"' for col in columns])
         
         # Valeurs pour UPDATE (toutes sauf la PK)
-        update_cols = [col for col in columns if col != "id_polytech_inter"]
+        update_cols = [col for col in columns if col != "id_polytech"]
         update_clause = ", ".join([f'"{col}" = EXCLUDED."{col}"' for col in update_cols])
         
         sql = f"""
             INSERT INTO mobilite ({columns_clause})
             VALUES ({values_clause})
-            ON CONFLICT (id_polytech_inter) DO UPDATE SET {update_clause}
+            ON CONFLICT (id_polytech) DO UPDATE SET {update_clause}
             RETURNING *
         """
         
@@ -66,8 +73,8 @@ class MobiliteDao:
             return Mobilite(**dict(row._mapping))
         raise ValueError("Aucune ligne retournée après l'upsert")
 
-    def delete(self, db: Session, id_polytech_inter: str) -> bool:
-        q = db.query(Mobilite).filter(Mobilite.id_polytech_inter == id_polytech_inter)
+    def delete(self, db: Session, id_polytech: str) -> bool:
+        q = db.query(Mobilite).filter(Mobilite.id_polytech == id_polytech)
         deleted = q.delete(synchronize_session=False)
         db.commit()
         return deleted > 0

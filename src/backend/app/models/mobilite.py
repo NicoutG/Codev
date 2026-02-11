@@ -2,12 +2,11 @@ from sqlalchemy import Column, Integer, String, Text
 
 from app.core.database import Base
 
-
 class Mobilite(Base):
     __tablename__ = "mobilite"
 
     # PK
-    id_polytech_inter = Column(String(64), primary_key=True, index=True)
+    id_polytech = Column(String(64), primary_key=True, index=True)
 
     sexe = Column(String(8), nullable=True)
     filiere = Column(String(64), nullable=True)

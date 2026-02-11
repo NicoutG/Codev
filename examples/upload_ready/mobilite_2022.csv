@@ -1,4 +1,4 @@
-﻿id_polytech_inter;sexe;filiere;cursus;nationalite;diplome;stage_3a;stage_4a;s9_5a;stage_5a;double_diplome;sejourt_court;cesure;substitution;nb_mois_stage;nb_mois_etude;commentaires;total
+﻿id_polytech;sexe;filiere;cursus;nationalite;diplome;stage_3a;stage_4a;s9_5a;stage_5a;double_diplome;sejourt_court;cesure;substitution;nb_mois_stage;nb_mois_etude;commentaires;total
 2122_INTER_GBM001;F;GBM;FISE;FRANCAIS(E);oui;;;;;;1;;;1;0;;1
 2122_INTER_GBM002;F;GBM;FISE;;oui;;;;;;;;;0;0;;0
 2122_INTER_GBM003;F;GBM;FISE;TUNISIEN(NE);oui;;;;;;1;;;1;0;;1

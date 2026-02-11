@@ -26,7 +26,7 @@ def create_indexes():
         "CREATE INDEX IF NOT EXISTS idx_etudiants_validation_annee ON etudiants(validation_annee)",
         
         # Table mobilite
-        "CREATE INDEX IF NOT EXISTS idx_mobilite_id_polytech_inter ON mobilite(id_polytech_inter)",
+        "CREATE INDEX IF NOT EXISTS idx_mobilite_id_polytech ON mobilite(id_polytech)",
         "CREATE INDEX IF NOT EXISTS idx_mobilite_type ON mobilite(type)",
         
         # Index composites

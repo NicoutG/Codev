@@ -129,7 +129,7 @@ class MetadataDao:
                 "regime_inscription",
             ],
             "mobilite": [
-                "id_polytech_inter",
+                "id_polytech",
                 "sexe",
                 "filiere",
                 "cursus",
