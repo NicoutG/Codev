@@ -40,12 +40,13 @@ export default function ValueEditor({ value, onChange }) {
   const getType = () => {
     if (value === null) return "null";
     if (value?.agg) return "aggregation";
-    if (value?.col) return "column";
+    if (typeof value === "object" && value !== null && ("col" in value || Object.keys(value).length === 0)) return "column";
     if (typeof value === "number") return "number";
     if (typeof value === "boolean") return "boolean";
     if (typeof value === "string") return "string";
     return "number";
   };
+
 
   const type = getType();
 
@@ -68,8 +69,9 @@ export default function ValueEditor({ value, onChange }) {
         break;
 
       case "column":
-        onChange({ col: defaultTableForColumn });
+        onChange(value && typeof value === "object" ? value : {});
         break;
+
 
       case "aggregation":
         onChange({
