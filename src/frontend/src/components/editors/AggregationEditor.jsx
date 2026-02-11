@@ -12,31 +12,32 @@ export default function AggregationEditor({ value, onChange }) {
     }
   }
 
+  const needsColumn = ["sum", "avg", "min", "max"].includes(value.agg);
+
   return (
-    <div style={{ border: "1px dashed #aaa", padding: 5 }}>
+    <div style={{ border: "1px dashed #aaa", padding: 5, borderRadius: 4 }}>
       <select
         value={value.agg}
         onChange={e => changeAgg(e.target.value)}
+        style={{ marginBottom: 5 }}
       >
         <option value="count">count</option>
         <option value="sum">sum</option>
         <option value="avg">avg</option>
+        <option value="min">min</option>
+        <option value="max">max</option>
       </select>
 
-      {(value.agg === "sum" || value.agg === "avg") && (
+      {needsColumn && (
         <ColumnEditor
           value={{ col: value.col || "" }}
-          onChange={expr =>
-            onChange({ ...value, col: expr.col })
-          }
+          onChange={expr => onChange({ ...value, col: expr.col })}
         />
       )}
 
       <TableSelectionEditor
         value={value.subject || { tables: [], conditions: null }}
-        onChange={subject =>
-          onChange({ ...value, subject })
-        }
+        onChange={subject => onChange({ ...value, subject })}
       />
     </div>
   );

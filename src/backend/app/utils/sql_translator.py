@@ -97,7 +97,7 @@ class JsonToSqlTranslator:
             return self._expr(expr)
 
     def _aggregation(self, agg: dict) -> str:
-        func = agg.get("agg", "").upper()
+        func = agg.get("agg", "").upper()  # sum, avg, min, max, count...
         col = agg.get("col", "1")
 
         subject = agg.get("subject") or {}
@@ -171,7 +171,7 @@ class JsonToSqlTranslator:
                 if not right_expr.startswith("'") or not right_expr.endswith("'"):
                     normalized = normalize_text_value(str(right))
                     escaped = normalized.replace("'", "''")
-                    right_expr = f"'{escaped}'"
+                    right_expr = f"{escaped}"
                 return f"{left_expr} NOT ILIKE {right_expr}"
 
             # Nouvelle logique : "=" ou "!=" avec % devient ILIKE / NOT ILIKE
@@ -203,5 +203,3 @@ class JsonToSqlTranslator:
             return f"{left_expr} {op} {right_expr}"
 
         raise ValueError(f"Condition inconnue : {cond}")
-
-
