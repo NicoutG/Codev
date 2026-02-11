@@ -113,6 +113,7 @@ export default function TableSelectionEditor({ value, onChange, isSubjectSection
         <strong style={{ marginTop: 10, display: "block" }}>Conditions</strong>
         {conditions && (
           <button
+            type="button"
             style={{ margin: "6px 0" }}
             onClick={() => onChange({ ...value, conditions: null })}
           >

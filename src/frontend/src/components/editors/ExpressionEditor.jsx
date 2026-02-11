@@ -47,10 +47,10 @@ export default function ExpressionEditor({ value, onChange }) {
         />
 
         {/* supprimer l'expression */}
-        <button onClick={() => onChange(left)}>✕</button>
+        <button type="button" onClick={() => onChange(left)}>✕</button>
 
         {/* étendre */}
-        <button onClick={wrapWithOp}>+ Expression</button>
+        <button type="button" onClick={wrapWithOp}>+ Expression</button>
       </div>
     );
   }
@@ -61,7 +61,7 @@ export default function ExpressionEditor({ value, onChange }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
       <ValueEditor value={value} onChange={onChange} />
-      <button onClick={wrapWithOp}>+ Expression</button>
+      <button type="button" onClick={wrapWithOp}>+ Expression</button>
     </div>
   );
 }

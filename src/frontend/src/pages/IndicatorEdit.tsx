@@ -81,6 +81,20 @@ const IndicatorEditContent: React.FC = () => {
     });
   }
 
+  function moveColumnUp(index: number) {
+    if (index === 0) return;
+    const cols = [...indicator.colonnes];
+    [cols[index - 1], cols[index]] = [cols[index], cols[index - 1]];
+    setIndicator({ ...indicator, colonnes: cols });
+  }
+
+  function moveColumnDown(index: number) {
+    if (index === indicator.colonnes.length - 1) return;
+    const cols = [...indicator.colonnes];
+    [cols[index + 1], cols[index]] = [cols[index], cols[index + 1]];
+    setIndicator({ ...indicator, colonnes: cols });
+  }
+
   // --- JSON Import/Export ---
   function importJson(file: File) {
     const reader = new FileReader();
@@ -188,7 +202,6 @@ const IndicatorEditContent: React.FC = () => {
     <Layout>
       <SubjectProvider sujet={indicator.sujet} setSujet={(sujet) => setIndicator({ ...indicator, sujet })}>
         <div>
-          {/* --- Header --- */}
           <div style={commonStyles.pageHeader}>
             <h1 style={commonStyles.pageTitle}>Modifier l'indicateur</h1>
             <p style={commonStyles.pageSubtitle}>Modifiez les paramètres de l'indicateur</p>
@@ -210,11 +223,6 @@ const IndicatorEditContent: React.FC = () => {
                   required
                   placeholder="Ex: Taux d'insertion par promotion"
                   style={commonStyles.input}
-                  onFocus={(e) => Object.assign(e.target.style, commonStyles.inputFocus)}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e2e8f0';
-                    e.target.style.boxShadow = 'none';
-                  }}
                 />
               </div>
 
@@ -226,35 +234,16 @@ const IndicatorEditContent: React.FC = () => {
                   placeholder="Décrivez l'indicateur..."
                   rows={3}
                   style={commonStyles.textarea}
-                  onFocus={(e) => Object.assign(e.target.style, commonStyles.inputFocus)}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = '#e2e8f0';
-                    e.target.style.boxShadow = 'none';
-                  }}
                 />
               </div>
 
               {/* Import / Export JSON */}
               <div style={pageStyles.indicator.importExportButtons}>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}
-                >
+                <button type="button" onClick={() => fileInputRef.current?.click()} style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}>
                   📁 Importer un JSON
                 </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="application/json"
-                  style={{ display: 'none' }}
-                  onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])}
-                />
-                <button
-                  type="button"
-                  onClick={exportToFile}
-                  style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}
-                >
+                <input ref={fileInputRef} type="file" accept="application/json" style={{ display: 'none' }} onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])} />
+                <button type="button" onClick={exportToFile} style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}>
                   💾 Exporter le JSON
                 </button>
               </div>
@@ -269,37 +258,27 @@ const IndicatorEditContent: React.FC = () => {
               border: '1px solid #e2e8f0',
               marginBottom: '1.5rem'
             }}>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b', marginBottom: '1rem' }}>
-                Sujet
-              </h2>
-              <SubjectBlock
-                value={indicator.sujet}
-                onChange={(sujet) => setIndicator({ ...indicator, sujet })}
-              />
+              <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b', marginBottom: '1rem' }}>Sujet</h2>
+              <SubjectBlock value={indicator.sujet} onChange={(sujet) => setIndicator({ ...indicator, sujet })} />
             </div>
 
             {/* --- Colonnes --- */}
             <div style={pageStyles.indicator.formSection}>
               <div style={pageStyles.indicator.sectionHeader}>
                 <h2 style={pageStyles.indicator.sectionTitle}>Colonnes</h2>
-                <button
-                  type="button"
-                  onClick={addColumn}
-                  style={pageStyles.indicator.addColumnButton}
-                >
-                  + Ajouter une colonne
-                </button>
+                <button type="button" onClick={addColumn} style={pageStyles.indicator.addColumnButton}>+ Ajouter une colonne</button>
               </div>
+
               {indicator.colonnes.length === 0 ? (
                 <p style={pageStyles.indicator.emptyColumns}>Aucune colonne définie. Ajoutez-en une pour commencer.</p>
               ) : (
                 indicator.colonnes.map((col: any, i: number) => (
-                  <div key={i} style={pageStyles.indicator.columnItem}>
-                    <ColumnBlock
-                      value={col}
-                      onChange={(newCol) => updateColumn(i, newCol)}
-                      onDelete={() => deleteColumn(i)}
-                    />
+                  <div key={i} style={{ ...pageStyles.indicator.columnItem, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ColumnBlock value={col} onChange={(newCol) => updateColumn(i, newCol)} onDelete={() => deleteColumn(i)} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                      <button type="button" onClick={() => moveColumnUp(i)} disabled={i === 0} style={{ cursor: i === 0 ? 'not-allowed' : 'pointer' }}>⬆️</button>
+                      <button type="button" onClick={() => moveColumnDown(i)} disabled={i === indicator.colonnes.length - 1} style={{ cursor: i === indicator.colonnes.length - 1 ? 'not-allowed' : 'pointer' }}>⬇️</button>
+                    </div>
                   </div>
                 ))
               )}
@@ -349,11 +328,7 @@ const IndicatorEditContent: React.FC = () => {
             <div style={pageStyles.indicator.formSection}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <h2 style={pageStyles.indicator.sectionTitle}>JSON généré</h2>
-                <button
-                  type="button"
-                  onClick={() => setShowJson((v) => !v)}
-                  style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}
-                >
+                <button type="button" onClick={() => setShowJson((v) => !v)} style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}>
                   {showJson ? '🙈 Masquer' : '👀 Afficher'}
                 </button>
               </div>
@@ -378,28 +353,12 @@ const IndicatorEditContent: React.FC = () => {
                 type="button"
                 onClick={handleExecute}
                 disabled={isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length}
-                style={{
-                  ...commonStyles.buttonSuccess,
-                  ...(isExecuting || !indicator?.sujet?.tables?.length || !indicator?.colonnes?.length ? commonStyles.buttonPrimaryDisabled : {}),
-                }}
+                style={commonStyles.buttonSuccess}
               >
                 {isExecuting ? '⏳ Exécution...' : '▶️ Tester l\'indicateur'}
               </button>
-              <button
-                type="button"
-                onClick={() => navigate('/')}
-                style={commonStyles.buttonSecondary}
-              >
-                Annuler
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                style={{
-                  ...commonStyles.buttonPrimary,
-                  ...(isSaving ? commonStyles.buttonPrimaryDisabled : {}),
-                }}
-              >
+              <button type="button" onClick={() => navigate('/')} style={commonStyles.buttonSecondary}>Annuler</button>
+              <button type="submit" disabled={isSaving} style={commonStyles.buttonPrimary}>
                 {isSaving ? 'Sauvegarde en cours...' : 'Enregistrer les modifications'}
               </button>
             </div>
