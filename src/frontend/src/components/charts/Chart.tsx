@@ -726,15 +726,20 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
           ) : chartsToRender.length === 1 ? (
             renderOneChart(chartsToRender[0].rows)
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              gap: '1rem'
+            }}>
               {chartsToRender.length >= (config?.maxCharts ?? 200) && (
                 <div style={{
-                  padding: '0.75rem 1rem',
-                  borderRadius: '8px',
-                  backgroundColor: '#fff7ed',
-                  border: '1px solid #fed7aa',
-                  color: '#9a3412',
-                  fontSize: '0.875rem'
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '10px',
+                  padding: '1rem',
+                  backgroundColor: '#ffffff',
+                  flex: '0 0 32%',   // 3 par ligne
+                  minWidth: '300px'  // évite que ça devienne trop petit
                 }}>
                   Trop de graphiques à afficher : rendu limité à {config?.maxCharts ?? 200}.
                   (Tu peux ajuster <b>config.maxCharts</b>)
