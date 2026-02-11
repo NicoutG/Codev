@@ -18,7 +18,7 @@ export default function CaseItemEditor({ value, onChange, onDelete }) {
         }
       />
 
-      <button onClick={onDelete}>❌</button>
+      <button type="button" onClick={onDelete}>❌</button>
     </div>
   );
 }

@@ -4,7 +4,7 @@ export default function Block({ title, onDelete, children }) {
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <strong>{title}</strong>
         {onDelete && (
-          <button onClick={onDelete}>❌</button>
+          <button type="button" onClick={onDelete}>❌</button>
         )}
       </div>
       {children}

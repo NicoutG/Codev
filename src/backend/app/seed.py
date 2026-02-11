@@ -88,9 +88,9 @@ def seed_predefined_indicators(db: Session) -> None:
                     "conditions": {
                         "or": [
                             {"=": [{"col": "situation_mars"}, "En activité professionnelle"]},
-                            {"like": [{"col": "type_etude"}, "%thèse%"]},
-                            {"like": [{"col": "type_etude"}, "%VIE%"]},
-                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                            {"=": [{"col": "type_etude"}, "%thèse%"]},
+                            {"=": [{"col": "type_etude"}, "%VIE%"]},
+                            {"=": [{"col": "situation_mars"}, "%thèse%"]}
                         ]
                     }
                 },
@@ -276,10 +276,10 @@ def seed_predefined_indicators(db: Session) -> None:
                     "tables": ["insertion"],
                     "conditions": {
                         "or": [
-                            {"like": [{"col": "type_etude"}, "%thèse%"]},
-                            {"like": [{"col": "type_etude"}, "%these%"]},
-                            {"like": [{"col": "type_etude"}, "%Thèse%"]},
-                            {"like": [{"col": "situation_mars"}, "%thèse%"]}
+                            {"=": [{"col": "type_etude"}, "%thèse%"]},
+                            {"=": [{"col": "type_etude"}, "%these%"]},
+                            {"=": [{"col": "type_etude"}, "%Thèse%"]},
+                            {"=": [{"col": "situation_mars"}, "%thèse%"]}
                         ]
                     }
                 },

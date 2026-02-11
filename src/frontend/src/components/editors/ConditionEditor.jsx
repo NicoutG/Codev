@@ -5,18 +5,18 @@ const LOGICAL_OPS = ["and", "or"];
 
 export default function ConditionEditor({ value, onChange }) {
   /* ======================
-     Créer une condition simple
+     Créer une nouvelle condition simple
      ====================== */
   const newCondition = () => ({
     "=": [null, null]
   });
 
   /* ======================
-     Aucune condition
+     Aucune condition existante
      ====================== */
   if (!value) {
     return (
-      <button onClick={() => onChange(newCondition())}>
+      <button type="button" onClick={() => onChange(newCondition())}>
         + Condition
       </button>
     );
@@ -37,9 +37,8 @@ export default function ConditionEditor({ value, onChange }) {
 
     const removeItem = i => {
       const next = items.filter((_, idx) => idx !== i);
-
       if (next.length === 1) {
-        onChange(next[0]); // déplier
+        onChange(next[0]); // déplier si un seul restant
       } else {
         onChange({ [key]: next });
       }
@@ -53,16 +52,16 @@ export default function ConditionEditor({ value, onChange }) {
       <div style={{ marginLeft: 12 }}>
         {items.map((cond, i) => (
           <div key={i}>
-            {/* condition */}
+            {/* Condition individuelle */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <ConditionEditor
                 value={cond}
                 onChange={c => updateItem(i, c)}
               />
-              <button onClick={() => removeItem(i)}>✕</button>
+              <button type="button" onClick={() => removeItem(i)}>✕</button>
             </div>
 
-            {/* opérateur logique entre lignes */}
+            {/* Opérateur logique entre conditions */}
             {i < items.length - 1 && (
               <select
                 value={key}
@@ -77,6 +76,7 @@ export default function ConditionEditor({ value, onChange }) {
         ))}
 
         <button
+          type="button"
           style={{ marginTop: 6 }}
           onClick={() =>
             onChange({ [key]: [...items, newCondition()] })
@@ -109,9 +109,7 @@ export default function ConditionEditor({ value, onChange }) {
 
       <select
         value={op}
-        onChange={e =>
-          onChange({ [e.target.value]: [left, right] })
-        }
+        onChange={e => onChange({ [e.target.value]: [left, right] })}
       >
         {COMP_OPS.map(o => (
           <option key={o} value={o}>{o}</option>
@@ -123,7 +121,7 @@ export default function ConditionEditor({ value, onChange }) {
         onChange={r => onChange({ [op]: [left, r] })}
       />
 
-      <button onClick={wrapWithLogical}>
+      <button type="button" onClick={wrapWithLogical}>
         + Condition
       </button>
     </div>
