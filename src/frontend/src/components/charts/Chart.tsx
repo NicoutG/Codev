@@ -656,7 +656,7 @@ export const Chart: React.FC<ChartProps> = ({ type, data, columns, title, config
             Catégories : <span style={{ color: '#334155', fontWeight: 600 }}>{categoryLabelCol}</span>
             {type === 'pie' && numericCols.length > 1 && (
               <span style={{ marginLeft: '0.5rem' }}>
-                (camembert basé sur <b>{pieValueKey}</b>)
+                (Circulaire basé sur <b>{pieValueKey}</b>)
               </span>
             )}
           </div>

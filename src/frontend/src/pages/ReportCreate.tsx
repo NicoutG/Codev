@@ -11,7 +11,7 @@ const chartTypes = [
   { value: null, label: 'Aucun graphique' },
   { value: 'bar', label: 'Barres' },
   { value: 'line', label: 'Ligne' },
-  { value: 'pie', label: 'Camembert' },
+  { value: 'pie', label: 'Circulaire' },
   { value: 'area', label: 'Aire' }
 ];
 
