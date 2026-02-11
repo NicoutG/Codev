@@ -179,6 +179,43 @@ const DatabasePageContent: React.FC = () => {
     return String(value);
   };
 
+  const handleDownloadNomenclature = async () => {
+    const fileUrl = "/codev_nomenclature.xlsx";
+
+    try {
+      const res = await fetch(fileUrl, { cache: "no-store" });
+
+      if (!res.ok) {
+        throw new Error(`Téléchargement impossible (${res.status})`);
+      }
+
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("text/html")) {
+        throw new Error(
+          "Le serveur renvoie du HTML à la place du fichier .xlsx (fallback SPA ou mauvais chemin)."
+        );
+      }
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = "codev_nomenclature.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      console.error(e);
+      alert(
+        "Impossible de télécharger la nomenclature. Vérifie que le fichier existe dans /public et que l’URL est correcte."
+      );
+    }
+  };
+
+
   const totalPages = tableData ? Math.ceil(tableData.total / rowsPerPage) : 0;
 
   if (isLoading) {
@@ -211,13 +248,32 @@ const DatabasePageContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={commonStyles.pageHeader}>
-          <h1 style={commonStyles.pageTitle}>
-            Base de données
-          </h1>
-          <p style={commonStyles.pageSubtitle}>
-            Gérez les données des tables et importez/exportez des fichiers CSV
-          </p>
+
+        <div style={{display: "flex", justifyContent: "space-between"}}>
+          <div style={commonStyles.pageHeader}>
+            <h1 style={commonStyles.pageTitle}>
+              Base de données
+            </h1>
+            <p style={commonStyles.pageSubtitle}>
+              Gérez les données des tables et importez/exportez des fichiers CSV
+            </p>
+          </div>
+          <div>
+
+           <button
+              onClick={handleDownloadNomenclature}
+              style={commonStyles.buttonSecondary}
+              onMouseEnter={(e) => {
+                Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#f1f5f9';
+                e.currentTarget.style.color = '#64748b';
+              }}
+              >
+              📥 Nomenclature
+            </button>
+          </div>
         </div>
 
         {error && (
