@@ -5,6 +5,7 @@ export default function SubjectBlock({ value, onChange }) {
       <TableSelectionEditor
         value={value}
         onChange={onChange}
+        isSubjectSection={true}
       />
   );
 }
