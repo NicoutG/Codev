@@ -429,6 +429,18 @@ const UsersPageContent: React.FC = () => {
                   </th>
                   <th style={{
                     padding: '1rem 1.5rem',
+                    textAlign: 'left',
+                    fontSize: '0.75rem',
+                    fontWeight: '600',
+                    color: '#64748b',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    borderBottom: '1px solid #e2e8f0'
+                  }}>
+                    Catégorie
+                  </th>
+                  <th style={{
+                    padding: '1rem 1.5rem',
                     textAlign: 'right',
                     fontSize: '0.75rem',
                     fontWeight: '600',
