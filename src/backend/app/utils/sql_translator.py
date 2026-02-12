@@ -97,24 +97,47 @@ class JsonToSqlTranslator:
             return self._expr(expr)
 
     def _aggregation(self, agg: dict) -> str:
-        func = agg.get("agg", "").upper()  # sum, avg, min, max, count...
+        func = agg.get("agg", "").lower()
         col = agg.get("col", "1")
 
-        subject = agg.get("subject") or {}
-        tables = subject.get("tables", [])
+        has_subject = "subject" in agg
+        subject = agg.get("subject") if has_subject else None
+
+        # --------------------------------------------------
+        # 1️⃣ Aucun subject → agrégation simple
+        # --------------------------------------------------
+        if not has_subject:
+            if func == "count":
+                return "COUNT(*)"
+            return f"{func.upper()}({col})"
+
+        tables = subject.get("tables") or []
         conditions = subject.get("conditions")
 
+        # --------------------------------------------------
+        # 2️⃣ Subject avec tables → sous-requête
+        # --------------------------------------------------
         if tables:
             from_clause = ", ".join(tables)
             where_clause = f" WHERE {self._condition(conditions)}" if conditions else ""
-            return f"(SELECT {func}({col}) FROM {from_clause}{where_clause})"
+            return f"(SELECT {func.upper()}({col}) FROM {from_clause}{where_clause})"
 
-        condition = agg.get("condition") or None
-        if not condition:
-            return f"{func}({col})"
+        # --------------------------------------------------
+        # 3️⃣ Subject sans tables → CASE WHEN sur sujet principal
+        # --------------------------------------------------
+        if not conditions:
+            # subject explicite mais sans filtre
+            if func == "count":
+                return f"COUNT({col})"
+            return f"{func.upper()}({col})"
 
-        cond_sql = self._condition(condition)
-        return f"{func}(CASE WHEN {cond_sql} THEN {col} END)"
+        cond_sql = self._condition(conditions)
+
+        if func == "count":
+            return f"COUNT(CASE WHEN {cond_sql} THEN 1 END)"
+
+        return f"{func.upper()}(CASE WHEN {cond_sql} THEN {col} END)"
+
 
     # ---------- CASE ----------
     def _case(self, col: dict) -> str:
