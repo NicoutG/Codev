@@ -4,8 +4,7 @@ export interface User {
   id: number;
   username: string;
   email: string;
-  role: 'consultant' | 'editeur' | 'admin';
-  category: 'polytech' | 'cti';
+  role: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin';
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -15,15 +14,13 @@ export interface UserCreate {
   username: string;
   email: string;
   password: string;
-  role: 'consultant' | 'editeur' | 'admin';
-  category: 'polytech' | 'cti';
+  role: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin';
 }
 
 export interface UserUpdate {
   username?: string;
   email?: string;
-  role?: 'consultant' | 'editeur' | 'admin';
-  category?: 'polytech' | 'cti';
+  role?: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin';
   password?: string;
   is_active?: boolean;
 }
@@ -49,13 +46,8 @@ export const usersApi = {
     return response.data;
   },
 
-  updateRole: async (id: number, role: 'consultant' | 'editeur' | 'admin'): Promise<User> => {
+  updateRole: async (id: number, role: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin'): Promise<User> => {
     const response = await apiClient.put<User>(`/api/v1/users/${id}/role?role=${role}`);
-    return response.data;
-  },
-
-  updateCategory: async (id: number, category: 'polytech' | 'cti'): Promise<User> => {
-    const response = await apiClient.put<User>(`/api/v1/users/${id}/category?category=${category}`);
     return response.data;
   },
 

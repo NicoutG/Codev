@@ -6,6 +6,5 @@
 
 ## Autres
 - améliorer les interfaces (parfois de longues liste de données sont affichées alors que pas forcement necessaire, la premiere chose qu'on voit quand on clique sur un indicateur est le json, peut etre que ce n est pas le plus pertinent, etc)
-- creer le nouveau grade qui ne peux que visionner les rapports
 - permettre d'exporter les rapports en pdf (avec les charts, ou a defaut de telecharger les charts)
 - Ajouter des colonnes data_text_1, data_text_2, ... jusqu'à 5 pour des données additionnelles de type text, et pareil pour les nombre : data_number_1 data_number_2, ... jusqu'à 5. le but etant d'avoir de la flexibilité pour que l'utilisateur puisse ajouter des colonnes additionnelles.

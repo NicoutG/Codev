@@ -725,7 +725,7 @@ const DatabasePageContent: React.FC = () => {
 
 export default function DatabasePage() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requiredRole="consultant">
       <DatabasePageContent />
     </ProtectedRoute>
   );

@@ -4,10 +4,10 @@ import { useAuth } from '../../contexts/AuthContext';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'consultant' | 'editeur' | 'admin';
+  requiredRole?: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin';
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole = 'consultant' }) => {
+export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole = 'consultant_rapport' }) => {
   const { isAuthenticated, isLoading, hasRole } = useAuth();
 
   if (isLoading) {

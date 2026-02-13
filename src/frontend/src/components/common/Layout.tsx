@@ -7,7 +7,7 @@ interface LayoutProps {
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isConsultant } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -18,6 +18,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getRoleLabel = (role: string) => {
     const labels: Record<string, string> = {
+      consultant_rapport: 'Consultant Rapport',
       consultant: 'Consultant',
       editeur: 'Éditeur',
       admin: 'Administrateur'
@@ -27,6 +28,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const getRoleColor = (role: string) => {
     const colors: Record<string, string> = {
+      consultant_rapport: '#64748b',
       consultant: '#64748b',
       editeur: '#3b82f6',
       admin: '#1e40af'
@@ -81,6 +83,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Indicateurs
               </Link>
+              {isConsultant && (
               <Link
                 to="/database"
                 style={{
@@ -96,6 +99,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
               >
                 Base de données
               </Link>
+              )}
               <Link
                 to="/reports"
                 style={{

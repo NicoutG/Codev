@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.api.deps import get_current_user, require_admin
 from app.services.user_service import UserService
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
-from app.models.user import User, UserRole, UserCategory
+from app.models.user import User, UserRole
 
 router = APIRouter()
 service = UserService()
@@ -53,15 +53,6 @@ def update_user_role(
     db: Session = Depends(get_db)
 ):
     return service.update_user(db, user_id, UserUpdate(role=role), current_user)
-
-@router.put("/{user_id}/category", response_model=UserResponse)
-def update_user_category(
-    user_id: int,
-    category: UserCategory,
-    current_user: User = Depends(require_admin),
-    db: Session = Depends(get_db)
-):
-    return service.update_user(db, user_id, UserUpdate(category=category), current_user)
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(

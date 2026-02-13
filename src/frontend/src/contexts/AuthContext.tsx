@@ -8,9 +8,10 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   isLoading: boolean;
-  hasRole: (role: 'consultant' | 'editeur' | 'admin') => boolean;
+  hasRole: (role: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin') => boolean;
   isAdmin: boolean;
   isEditeur: boolean;
+  isConsultant: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,9 +60,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('user');
   };
 
-  const hasRole = (role: 'consultant' | 'editeur' | 'admin'): boolean => {
+  const hasRole = (role: 'consultant_rapport' | 'consultant' | 'editeur' | 'admin'): boolean => {
     if (!user) return false;
-    const roleHierarchy = { consultant: 1, editeur: 2, admin: 3 };
+    const roleHierarchy = { consultant_rapport: 0, consultant: 1, editeur: 2, admin: 3 };
     return roleHierarchy[user.role] >= roleHierarchy[role];
   };
 
@@ -75,6 +76,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     hasRole,
     isAdmin: user?.role === 'admin',
     isEditeur: user?.role === 'editeur' || user?.role === 'admin',
+    isConsultant : user?.role === 'consultant' || user?.role === 'editeur' || user?.role === 'admin',
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
