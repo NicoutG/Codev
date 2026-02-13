@@ -71,9 +71,22 @@ class JsonToSqlTranslator:
             normalized = normalize_text_value(expr)
             escaped = normalized.replace("'", "''")
             return f"'{escaped}'"
-        if isinstance(expr, dict) and "col" in expr:
-            return expr["col"]
+        if isinstance(expr, dict):
+            if "col" in expr:
+                return expr["col"]
+            if "op" in expr:
+                return self._expr_op(expr)
         raise ValueError(f"Expression inconnue : {expr}")
+
+    def _expr_op(self, expr: dict) -> str:
+        """Génère une expression SQL à partir d'un dictionnaire {'op': '+', 'args': [...] }"""
+        op = expr["op"]
+        args = expr.get("args", [])
+        args_sql = [
+            self._expr(arg) if isinstance(arg, dict) and ("col" in arg or "op" in arg) else str(arg)
+            for arg in args
+        ]
+        return "(" + f" {op} ".join(args_sql) + ")"
 
     # ---------- AGGREGATIONS ----------
     def _aggregation_expr(self, expr: dict) -> str:
@@ -81,14 +94,7 @@ class JsonToSqlTranslator:
             return "NULL"
 
         if "op" in expr:
-            args = [
-                self._aggregation_expr(arg) if isinstance(arg, dict) else self._expr(arg)
-                for arg in expr.get("args", [])
-            ]
-            op = expr["op"]
-            if op == "/" and len(args) == 2 and args[0].replace(".", "", 1).isdigit() and float(args[0]) == 100:
-                args[0] = "100.0"
-            return "(" + f" {op} ".join(args) + ")"
+            return self._expr_op(expr)
 
         elif "agg" in expr:
             return self._aggregation(expr)
@@ -97,24 +103,39 @@ class JsonToSqlTranslator:
             return self._expr(expr)
 
     def _aggregation(self, agg: dict) -> str:
-        func = agg.get("agg", "").upper()  # sum, avg, min, max, count...
+        func = agg.get("agg", "").lower()
         col = agg.get("col", "1")
 
-        subject = agg.get("subject") or {}
-        tables = subject.get("tables", [])
+        subject = agg.get("subject")
+        if not subject:
+            # Agrégation simple sur le sujet principal
+            if func == "count":
+                return "COUNT(*)"
+            return f"{func.upper()}({col})"
+
+        tables = subject.get("tables") or []
         conditions = subject.get("conditions")
 
+        # --------------------------------------------------
+        # Subject avec tables → sous-requête
+        # --------------------------------------------------
         if tables:
             from_clause = ", ".join(tables)
             where_clause = f" WHERE {self._condition(conditions)}" if conditions else ""
-            return f"(SELECT {func}({col}) FROM {from_clause}{where_clause})"
+            return f"(SELECT {func.upper()}({col}) FROM {from_clause}{where_clause})"
 
-        condition = agg.get("condition") or None
-        if not condition:
-            return f"{func}({col})"
+        # --------------------------------------------------
+        # Subject sans tables → CASE WHEN sur sujet principal
+        # --------------------------------------------------
+        if not conditions:
+            if func == "count":
+                return f"COUNT({col})"
+            return f"{func.upper()}({col})"
 
-        cond_sql = self._condition(condition)
-        return f"{func}(CASE WHEN {cond_sql} THEN {col} END)"
+        cond_sql = self._condition(conditions)
+        if func == "count":
+            return f"COUNT(CASE WHEN {cond_sql} THEN 1 END)"
+        return f"{func.upper()}(CASE WHEN {cond_sql} THEN {col} END)"
 
     # ---------- CASE ----------
     def _case(self, col: dict) -> str:
@@ -145,11 +166,8 @@ class JsonToSqlTranslator:
         for op, values in cond.items():
             left, right = values
 
-            left_is_col = isinstance(left, dict) and "col" in left
-            right_is_col = isinstance(right, dict) and "col" in right
-
-            left_expr = self._expr(left) if left_is_col or isinstance(left, str) else str(left)
-            right_expr = self._expr(right) if right_is_col or isinstance(right, str) else str(right)
+            left_expr = self._expr_op(left) if isinstance(left, dict) and "op" in left else self._expr(left)
+            right_expr = self._expr_op(right) if isinstance(right, dict) and "op" in right else self._expr(right)
 
             # NULL handling
             if right is None or right_expr.upper() in ("NONE", "NULL"):
@@ -161,38 +179,18 @@ class JsonToSqlTranslator:
                     return f"{left_expr} IS NOT NULL"
 
             # LIKE handling
-            if op in ("like", "LIKE"):
+            if op.lower() in ("like", "not_like"):
                 if not right_expr.startswith("'") or not right_expr.endswith("'"):
                     normalized = normalize_text_value(str(right))
                     escaped = normalized.replace("'", "''")
                     right_expr = f"'{escaped}'"
-                return f"{left_expr} ILIKE {right_expr}"
-            elif op in ("not_like", "NOT_LIKE"):
-                if not right_expr.startswith("'") or not right_expr.endswith("'"):
-                    normalized = normalize_text_value(str(right))
-                    escaped = normalized.replace("'", "''")
-                    right_expr = f"{escaped}"
-                return f"{left_expr} NOT ILIKE {right_expr}"
+                return f"{left_expr} ILIKE {right_expr}" if op.lower() == "like" else f"{left_expr} NOT ILIKE {right_expr}"
 
             # Nouvelle logique : "=" ou "!=" avec % devient ILIKE / NOT ILIKE
             if op in ("=", "==", "!=", "<>"):
-                is_like = False
-                if isinstance(right, str) and "%" in right:
-                    normalized = normalize_text_value(str(right))
-                    escaped = normalized.replace("'", "''")
-                    right_expr = f"'{escaped}'"
-                    is_like = True
-                elif isinstance(left, str) and "%" in left:
-                    normalized = normalize_text_value(str(left))
-                    escaped = normalized.replace("'", "''")
-                    left_expr = f"'{escaped}'"
-                    is_like = True
-
+                is_like = isinstance(right, str) and "%" in right or isinstance(left, str) and "%" in left
                 if is_like:
-                    if op in ("=", "=="):
-                        return f"{left_expr} ILIKE {right_expr}"
-                    elif op in ("!=", "<>"):
-                        return f"{left_expr} NOT ILIKE {right_expr}"
+                    return f"{left_expr} ILIKE {right_expr}" if op in ("=", "==") else f"{left_expr} NOT ILIKE {right_expr}"
 
             # opérateurs classiques
             if op == "==":

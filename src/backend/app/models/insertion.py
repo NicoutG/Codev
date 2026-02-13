@@ -51,7 +51,7 @@ class Insertion(Base):
 
     num_emploi = Column(Text, nullable=True)
 
-    temps_pour_premier_emploi = Column(Text, nullable=True)
+    temps_pour_premier_emploi = Column(Integer, nullable=True)
 
     moyen_trouver_emploi = Column(Text, nullable=True)
     moyen_trouver_emploi_autre = Column(Text, nullable=True)
