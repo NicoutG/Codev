@@ -85,14 +85,36 @@ export const metadataApi: MetadataApi = {
     if (columnsForTablesCache.has(key)) return columnsForTablesCache.get(key)!;
     if (columnsForTablesPromise.has(key)) return columnsForTablesPromise.get(key)!;
 
-    const p = fetchColumnsForTables(tables)
-      .then((data) => {
-        columnsForTablesCache.set(key, data);
-        return data;
-      })
-      .finally(() => {
-        columnsForTablesPromise.delete(key);
+    const p = (async () => {
+      // On récupère les colonnes de chaque table
+      const allColumns = await Promise.all(
+        tables.map(async (table) => {
+          const cols = await this.listColumns(table);
+          return cols.map((col) => ({ table, col }));
+        })
+      );
+
+      const flatColumns = allColumns.flat();
+
+      // Compter combien de fois chaque nom de colonne apparaît
+      const colCount = new Map<string, number>();
+      flatColumns.forEach(({ col }) => {
+        colCount.set(col, (colCount.get(col) || 0) + 1);
       });
+
+      // Préfixer par le nom de la table seulement si le nom existe dans plusieurs tables
+      const result: ColumnName[] = flatColumns.map(({ table, col }) => {
+        if (colCount.get(col)! > 1) {
+          return `${table}.${col}`;
+        }
+        return col;
+      });
+
+      columnsForTablesCache.set(key, result);
+      return result;
+    })().finally(() => {
+      columnsForTablesPromise.delete(key);
+    });
 
     columnsForTablesPromise.set(key, p);
     return p;
