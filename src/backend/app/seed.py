@@ -315,7 +315,878 @@ def seed_predefined_indicators(db: Session) -> None:
                     }
                 }]
             }
-        }
+        },
+        {
+            "title": "FI001",
+            "description": "Nombre de diplômés employés - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "or": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en activité professionnelle"
+                                ]
+                            },
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en volontariat"
+                                ]
+                            },
+                            {
+                                "and": [
+                                {
+                                    "=": [
+                                    {
+                                        "col": "situation_mars"
+                                    },
+                                    "en poursuite d études"
+                                    ]
+                                },
+                                {
+                                    "or": [
+                                    {
+                                        "=": [
+                                        {
+                                            "col": "type_etude"
+                                        },
+                                        "Thèse académique"
+                                        ]
+                                    },
+                                    {
+                                        "=": [
+                                        {
+                                            "col": "type_etude"
+                                        },
+                                        "Thèse CIFRE, sur CDD"
+                                        ]
+                                    }
+                                    ]
+                                }
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI003",
+            "description": "Nombre de diplômés ayant trouvé un emploi en moins de deux mois - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "and": [
+                            {
+                                "<": [
+                                {
+                                    "col": "temps_pour_premier_emploi"
+                                },
+                                2
+                                ]
+                            },
+                            {
+                                "or": [
+                                {
+                                    "=": [
+                                    {
+                                        "col": "situation_mars"
+                                    },
+                                    "en activité professionnelle"
+                                    ]
+                                },
+                                {
+                                    "=": [
+                                    {
+                                        "col": "situation_mars"
+                                    },
+                                    "en volontariat"
+                                    ]
+                                },
+                                {
+                                    "and": [
+                                    {
+                                        "=": [
+                                        {
+                                            "col": "situation_mars"
+                                        },
+                                        "en poursuite d études"
+                                        ]
+                                    },
+                                    {
+                                        "or": [
+                                        {
+                                            "=": [
+                                            {
+                                                "col": "type_etude"
+                                            },
+                                            "Thèse académique"
+                                            ]
+                                        },
+                                        {
+                                            "=": [
+                                            {
+                                                "col": "type_etude"
+                                            },
+                                            "Thèse CIFRE, sur CDD"
+                                            ]
+                                        }
+                                        ]
+                                    }
+                                    ]
+                                }
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI005",
+            "description": "Nombre de diplômés en recherche d’emploi six mois après l’obtention du diplôme - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "=": [
+                            {
+                                "col": "situation_mars"
+                            },
+                            "En recherche d'emploi"
+                            ]
+                        }
+                        }
+                    }
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI006",
+            "description": "Nombre de diplômés embauchés avec un statut de cadre (en France ou sous contrat français, hors thèses) - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Genre",
+                    "expr": {
+                        "col": "genre"
+                    }
+                    },
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "and": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "En activité professionnelle"
+                                ]
+                            },
+                            {
+                                "=": [
+                                {
+                                    "col": "statut_emploi"
+                                },
+                                "cadre"
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    }
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI007",
+            "description": "Nombre de diplômés embauchés pour une durée indéterminée (en France ou sous contrat français) - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Genre",
+                    "expr": {
+                        "col": "genre"
+                    }
+                    },
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "and": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "En activité professionnelle"
+                                ]
+                            },
+                            {
+                                "=": [
+                                {
+                                    "col": "type_emploi"
+                                },
+                                "CDI"
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    }
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI009",
+            "description": "Nombre de diplômés ayant un emploi basé à l'étranger (y compris les thèses et les VIE) - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": {
+                    "!=": [
+                        {
+                        "col": "pays"
+                        },
+                        None
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Pays",
+                    "expr": {
+                        "col": "pays"
+                    }
+                    },
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "or": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en activité professionnelle"
+                                ]
+                            },
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en volontariat"
+                                ]
+                            },
+                            {
+                                "and": [
+                                {
+                                    "=": [
+                                    {
+                                        "col": "situation_mars"
+                                    },
+                                    "en poursuite d études"
+                                    ]
+                                },
+                                {
+                                    "or": [
+                                    {
+                                        "=": [
+                                        {
+                                            "col": "type_etude"
+                                        },
+                                        "Thèse académique"
+                                        ]
+                                    },
+                                    {
+                                        "=": [
+                                        {
+                                            "col": "type_etude"
+                                        },
+                                        "Thèse CIFRE, sur CDD"
+                                        ]
+                                    }
+                                    ]
+                                }
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI010",
+            "description": "Nombre de diplômés ayant un emploi basé à l'étranger (dont les VIE) - 12 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": {
+                    "!=": [
+                        {
+                        "col": "pays"
+                        },
+                        None
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Pays",
+                    "expr": {
+                        "col": "pays"
+                    }
+                    },
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "or": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en activité professionnelle"
+                                ]
+                            },
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en volontariat"
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI011",
+            "description": "Nombre de diplômés ayant un emploi basé en France - 12 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": {
+                    "!=": [
+                        {
+                        "col": "ville"
+                        },
+                        None
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Ville",
+                    "expr": {
+                        "col": "ville"
+                    }
+                    },
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "=": [
+                            {
+                                "col": "situation_mars"
+                            },
+                            "en activité professionnelle"
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI012",
+            "description": "Nombre de diplômés qui font une thèse - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "and": [
+                            {
+                                "=": [
+                                {
+                                    "col": "situation_mars"
+                                },
+                                "en poursuite d études"
+                                ]
+                            },
+                            {
+                                "or": [
+                                {
+                                    "=": [
+                                    {
+                                        "col": "type_etude"
+                                    },
+                                    "Thèse académique"
+                                    ]
+                                },
+                                {
+                                    "=": [
+                                    {
+                                        "col": "type_etude"
+                                    },
+                                    "Thèse CIFRE, sur CDD"
+                                    ]
+                                }
+                                ]
+                            }
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI014",
+            "description": "Nombre de diplômés qui font une poursuite d'études - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "insertion"
+                    ],
+                    "conditions": None
+                },
+                "colonnes": [
+                    {
+                    "expr": {
+                        "agg": "count",
+                        "subject": {
+                        "tables": [],
+                        "conditions": {
+                            "=": [
+                            {
+                                "col": "situation_mars"
+                            },
+                            "en poursuite d études"
+                            ]
+                        }
+                        }
+                    },
+                    "type": "aggregation",
+                    "titre": "Nombre"
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI016",
+            "description": "Nombre de diplômés de la dernière promotion ayant effectué une ou plusieurs mobilités académiques au cours de leur scolarité - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "mobilite"
+                    ],
+                    "conditions": {
+                    "=": [
+                        {
+                        "col": "diplome"
+                        },
+                        "oui"
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Spécialité",
+                    "expr": {
+                        "col": "filiere"
+                    }
+                    },
+                    {
+                    "type": "case",
+                    "titre": "Durée mobilité étude",
+                    "cases": [
+                        {
+                        "label": "Moins d'un semestre",
+                        "when": {
+                            "<": [
+                            {
+                                "col": "nb_mois_etude"
+                            },
+                            4
+                            ]
+                        }
+                        },
+                        {
+                        "label": "Un semestre",
+                        "when": {
+                            "and": [
+                            {
+                                ">=": [
+                                {
+                                    "col": "nb_mois_etude"
+                                },
+                                4
+                                ]
+                            },
+                            {
+                                "<=": [
+                                {
+                                    "col": "nb_mois_etude"
+                                },
+                                5
+                                ]
+                            }
+                            ]
+                        }
+                        },
+                        {
+                        "label": "Plus d'un semestre",
+                        "when": {
+                            ">": [
+                            {
+                                "col": "nb_mois_etude"
+                            },
+                            5
+                            ]
+                        }
+                        }
+                    ]
+                    },
+                    {
+                    "type": "group_by",
+                    "titre": "Genre",
+                    "expr": {
+                        "col": "sexe"
+                    }
+                    },
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count"
+                    }
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI017",
+            "description": "Nombre de diplômés de la dernière promotion ayant effectué un ou plusieurs stages à l'étranger - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "mobilite"
+                    ],
+                    "conditions": {
+                    "=": [
+                        {
+                        "col": "diplome"
+                        },
+                        "oui"
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Spécialité",
+                    "expr": {
+                        "col": "filiere"
+                    }
+                    },
+                    {
+                    "type": "case",
+                    "titre": "Durée mobilité professionnelle",
+                    "cases": [
+                        {
+                        "label": "Moins d'un semestre",
+                        "when": {
+                            "<": [
+                            {
+                                "col": "nb_mois_stage"
+                            },
+                            3
+                            ]
+                        }
+                        },
+                        {
+                        "label": "Un semestre",
+                        "when": {
+                            "and": [
+                            {
+                                ">=": [
+                                {
+                                    "col": "nb_mois_stage"
+                                },
+                                3
+                                ]
+                            },
+                            {
+                                "<=": [
+                                {
+                                    "col": "nb_mois_stage"
+                                },
+                                6
+                                ]
+                            }
+                            ]
+                        }
+                        },
+                        {
+                        "label": "Plus d'un semestre",
+                        "when": {
+                            ">": [
+                            {
+                                "col": "nb_mois_stage"
+                            },
+                            6
+                            ]
+                        }
+                        }
+                    ]
+                    },
+                    {
+                    "type": "group_by",
+                    "titre": "Genre",
+                    "expr": {
+                        "col": "sexe"
+                    }
+                    },
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count"
+                    }
+                    }
+                ]
+            }
+        },
+        {
+            "title": "FI018",
+            "description": "Durée de mobilité des doubles diplômés ingénieurs sortants de la dernière promotion - 6 mois après diplomation",
+            "indicator": {
+                "sujet": {
+                    "tables": [
+                    "mobilite"
+                    ],
+                    "conditions": {
+                    "=": [
+                        {
+                        "col": "double_diplome"
+                        },
+                        None
+                    ]
+                    }
+                },
+                "colonnes": [
+                    {
+                    "type": "group_by",
+                    "titre": "Spécialité",
+                    "expr": {
+                        "col": "filiere"
+                    }
+                    },
+                    {
+                    "type": "case",
+                    "titre": "Durée mobilité",
+                    "cases": [
+                        {
+                        "label": "Moins de 2 semestres",
+                        "when": {
+                            "<": [
+                            {
+                                "op": "+",
+                                "args": [
+                                {
+                                    "col": "nb_mois_stage"
+                                },
+                                {
+                                    "col": "nb_mois_etude"
+                                }
+                                ]
+                            },
+                            9
+                            ]
+                        }
+                        },
+                        {
+                        "label": "Moins de 4 semestres",
+                        "when": {
+                            "<": [
+                            {
+                                "op": "+",
+                                "args": [
+                                {
+                                    "col": "nb_mois_stage"
+                                },
+                                {
+                                    "col": "nb_mois_etude"
+                                }
+                                ]
+                            },
+                            18
+                            ]
+                        }
+                        },
+                        {
+                        "label": "4 semestres ou plus",
+                        "when": {
+                            ">=": [
+                            {
+                                "op": "+",
+                                "args": [
+                                {
+                                    "col": "nb_mois_stage"
+                                },
+                                {
+                                    "col": "nb_mois_etude"
+                                }
+                                ]
+                            },
+                            18
+                            ]
+                        }
+                        }
+                    ]
+                    },
+                    {
+                    "type": "group_by",
+                    "titre": "Genre",
+                    "expr": {
+                        "col": "sexe"
+                    }
+                    },
+                    {
+                    "type": "aggregation",
+                    "titre": "Nombre",
+                    "expr": {
+                        "agg": "count"
+                    }
+                    }
+                ]
+            }
+        },
     ]
 
     for item in predefined:
