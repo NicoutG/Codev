@@ -210,5 +210,13 @@
   gap: 1rem;
   justify-content: flex-end;
 }
-.centerText{ text-align:center }
-.resultsContainer{ display:flex;flex-direction:column;gap:2rem }
+
+.centerText {
+  text-align: center
+}
+
+.resultsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem
+}
