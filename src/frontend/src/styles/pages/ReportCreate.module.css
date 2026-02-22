@@ -114,6 +114,20 @@
   border-top: 1px solid var(--border);
 }
 
+.sectionSpacing {
+  margin-bottom: 2rem
+}
+
+.rowStartGap {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem
+}
+
+.flex1 {
+  flex: 1
+}
+
 .selectedList {
   display: flex;
   flex-direction: column;
