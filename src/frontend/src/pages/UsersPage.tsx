@@ -118,7 +118,7 @@ const UsersPageContent: React.FC = () => {
 
         {showCreateForm && (
           <div className={styles.cardCompact}>
-            <h2 className={styles.pageTitle} style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 600 }}>
+            <h2 className={`${styles.pageTitle} ${styles.cardCompactTitle}`}>
               Créer un nouvel utilisateur
             </h2>
             <form onSubmit={handleCreate}>
@@ -180,7 +180,7 @@ const UsersPageContent: React.FC = () => {
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <div className={styles.spinner} />
-            <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>Chargement...</p>
+            <p className={styles.loadingText}>Chargement...</p>
           </div>
         ) : (
           <div className={styles.tableWrapper}>
@@ -190,7 +190,7 @@ const UsersPageContent: React.FC = () => {
                   <th className={styles.tableHeaderCell}>Utilisateur</th>
                   <th className={styles.tableHeaderCell}>Email</th>
                   <th className={styles.tableHeaderCell}>Rôle</th>
-                  <th className={styles.tableHeaderCell} style={{ textAlign: 'right' }}>Actions</th>
+                  <th className={`${styles.tableHeaderCell} ${styles.thRight}`}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,7 +200,7 @@ const UsersPageContent: React.FC = () => {
                   return (
                     <tr key={user.id}>
                       <td className={styles.tableCell}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <div className={styles.rowCenterGap}>
                           <div className={styles.avatar}>{user.username.charAt(0).toUpperCase()}</div>
                           <div>
                             <div className={styles.username}>{user.username}</div>
@@ -237,11 +237,7 @@ const UsersPageContent: React.FC = () => {
               </tbody>
             </table>
             {users.length === 0 && !isLoading && (
-              <div style={{
-                padding: '4rem',
-                textAlign: 'center',
-                color: '#64748b'
-              }}>
+              <div className={styles.emptyState}>
                 Aucun utilisateur trouvé
               </div>
             )}

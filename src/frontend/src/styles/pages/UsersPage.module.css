@@ -1,3 +1,19 @@
+.cardCompactTitle {
+  font-size: 1.25rem;
+  margin-bottom: 1.5rem;
+  font-weight: 600
+}
+
+.thRight {
+  text-align: right
+}
+
+.rowCenterGap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem
+}
+
 .header {
   display: flex;
   justify-content: space-between;
