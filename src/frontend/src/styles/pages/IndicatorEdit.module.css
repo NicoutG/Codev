@@ -1,0 +1,165 @@
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem
+}
+
+.loadingSpinner {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 4px solid rgba(2, 6, 23, 0.08);
+  border-top-color: #0ea5a4;
+  animation: spin 1s linear infinite;
+  margin-bottom: 0.75rem
+}
+
+.loadingText {
+  color: #64748b
+}
+
+.cardCenter {
+  background: white;
+  padding: 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  text-align: center
+}
+
+.pageHeader {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0
+}
+
+.pageSubtitle {
+  color: #64748b;
+  margin: 0;
+  margin-top: 0.25rem
+}
+
+.formSection {
+  margin-bottom: 1.5rem
+}
+
+.importExportButtons {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem
+}
+
+.subjectCard {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.5rem
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem
+}
+
+.sectionTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0
+}
+
+.addColumnButton {
+  background: transparent;
+  border: 1px dashed #cbd5e1;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer
+}
+
+.addColumnButton:hover {
+  background: #f8fafc
+}
+
+.emptyColumns {
+  color: #64748b
+}
+
+.columnItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0.75rem
+}
+
+.moveButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 4px
+}
+
+.moveBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px
+}
+
+.moveBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45
+}
+
+.executionResult {
+  margin-bottom: 1rem;
+  background: #fff;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e6eef2
+}
+
+.sqlPreview {
+  background: #0b1220;
+  color: #e6eef2;
+  padding: 0.75rem;
+  border-radius: 6px;
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow: auto
+}
+
+.jsonPreview {
+  background: #0f172a;
+  color: #e5e7eb;
+  padding: 1rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  overflow-x: auto;
+  max-height: 400px
+}
+
+.actionButtons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1rem
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg)
+  }
+}

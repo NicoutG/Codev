@@ -8,6 +8,7 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, IndicatorUpdate } from '../api/indicators';
 import { commonStyles } from '../styles/common';
 import { pageStyles } from '../styles/pages';
+import styles from '../styles/pages/IndicatorEdit.module.css';
 
 interface ExecutionResult {
   sql: string;
@@ -180,9 +181,9 @@ const IndicatorEditContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={commonStyles.loadingContainer}>
-          <div style={commonStyles.loadingSpinner} />
-          <p style={{ color: '#64748b' }}>Chargement de l'indicateur...</p>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner} />
+          <p className={styles.loadingText}>Chargement de l'indicateur...</p>
         </div>
       </Layout>
     );
@@ -191,7 +192,7 @@ const IndicatorEditContent: React.FC = () => {
   if (!indicator) {
     return (
       <Layout>
-        <div style={{ ...commonStyles.card, textAlign: 'center' }}>
+        <div className={styles.cardCenter}>
           <p style={{ color: '#64748b' }}>Indicateur introuvable</p>
         </div>
       </Layout>
@@ -202,16 +203,16 @@ const IndicatorEditContent: React.FC = () => {
     <Layout>
       <SubjectProvider sujet={indicator.sujet} setSujet={(sujet) => setIndicator({ ...indicator, sujet })}>
         <div>
-          <div style={commonStyles.pageHeader}>
-            <h1 style={commonStyles.pageTitle}>Modifier l'indicateur</h1>
-            <p style={commonStyles.pageSubtitle}>Modifiez les paramètres de l'indicateur</p>
+          <div className={styles.pageHeader}>
+            <h1 className={styles.pageTitle}>Modifier l'indicateur</h1>
+            <p className={styles.pageSubtitle}>Modifiez les paramètres de l'indicateur</p>
           </div>
 
           {error && <div style={commonStyles.errorMessage}>{error}</div>}
 
           <form onSubmit={handleSubmit}>
             {/* --- Titre & description --- */}
-            <div style={pageStyles.indicator.formSection}>
+            <div className={styles.formSection}>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={commonStyles.label}>
                   Titre de l'indicateur <span style={commonStyles.labelRequired}>*</span>
@@ -238,7 +239,7 @@ const IndicatorEditContent: React.FC = () => {
               </div>
 
               {/* Import / Export JSON */}
-              <div style={pageStyles.indicator.importExportButtons}>
+              <div className={styles.importExportButtons}>
                 <button type="button" onClick={() => fileInputRef.current?.click()} style={{ ...commonStyles.buttonSmall, ...commonStyles.buttonSecondary }}>
                   📁 Importer un JSON
                 </button>
@@ -250,34 +251,27 @@ const IndicatorEditContent: React.FC = () => {
             </div>
 
             {/* --- Sujet --- */}
-            <div style={{
-              backgroundColor: 'white',
-              padding: '2rem',
-              borderRadius: '12px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-              border: '1px solid #e2e8f0',
-              marginBottom: '1.5rem'
-            }}>
+            <div className={styles.subjectCard}>
               <h2 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1e293b', marginBottom: '1rem' }}>Sujet</h2>
               <SubjectBlock value={indicator.sujet} onChange={(sujet) => setIndicator({ ...indicator, sujet })} />
             </div>
 
             {/* --- Colonnes --- */}
-            <div style={pageStyles.indicator.formSection}>
-              <div style={pageStyles.indicator.sectionHeader}>
-                <h2 style={pageStyles.indicator.sectionTitle}>Colonnes</h2>
-                <button type="button" onClick={addColumn} style={pageStyles.indicator.addColumnButton}>+ Ajouter une colonne</button>
+            <div className={styles.formSection}>
+              <div className={styles.sectionHeader}>
+                <h2 className={styles.sectionTitle}>Colonnes</h2>
+                <button type="button" onClick={addColumn} className={styles.addColumnButton}>+ Ajouter une colonne</button>
               </div>
 
               {indicator.colonnes.length === 0 ? (
-                <p style={pageStyles.indicator.emptyColumns}>Aucune colonne définie. Ajoutez-en une pour commencer.</p>
+                <p className={styles.emptyColumns}>Aucune colonne définie. Ajoutez-en une pour commencer.</p>
               ) : (
                 indicator.colonnes.map((col: any, i: number) => (
-                  <div key={i} style={{ ...pageStyles.indicator.columnItem, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div key={i} className={styles.columnItem}>
                     <ColumnBlock value={col} onChange={(newCol) => updateColumn(i, newCol)} onDelete={() => deleteColumn(i)} />
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                      <button type="button" onClick={() => moveColumnUp(i)} disabled={i === 0} style={{ cursor: i === 0 ? 'not-allowed' : 'pointer' }}>⬆️</button>
-                      <button type="button" onClick={() => moveColumnDown(i)} disabled={i === indicator.colonnes.length - 1} style={{ cursor: i === indicator.colonnes.length - 1 ? 'not-allowed' : 'pointer' }}>⬇️</button>
+                    <div className={styles.moveButtons}>
+                      <button type="button" onClick={() => moveColumnUp(i)} disabled={i === 0} className={styles.moveBtn}>⬆️</button>
+                      <button type="button" onClick={() => moveColumnDown(i)} disabled={i === indicator.colonnes.length - 1} className={styles.moveBtn}>⬇️</button>
                     </div>
                   </div>
                 ))
@@ -286,12 +280,12 @@ const IndicatorEditContent: React.FC = () => {
 
             {/* --- Résultats d'exécution --- */}
             {(executionResult || executionError) && (
-              <div style={pageStyles.indicator.executionResult}>
-                <h2 style={pageStyles.indicator.sectionTitle}>Résultats de l'exécution</h2>
+              <div className={styles.executionResult}>
+                <h2 className={styles.sectionTitle}>Résultats de l'exécution</h2>
                 {executionError && <div style={commonStyles.errorMessage}>{executionError}</div>}
                 {executionResult && (
                   <div>
-                    <pre style={pageStyles.indicator.sqlPreview}>{executionResult.sql}</pre>
+                    <pre className={styles.sqlPreview}>{executionResult.sql}</pre>
                     <p>
                       <strong>{executionResult.row_count}</strong> ligne{executionResult.row_count > 1 ? 's' : ''}
                     </p>
@@ -333,22 +327,14 @@ const IndicatorEditContent: React.FC = () => {
                 </button>
               </div>
               {showJson && (
-                <pre style={{
-                  background: '#0f172a',
-                  color: '#e5e7eb',
-                  padding: '1rem',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  overflowX: 'auto',
-                  maxHeight: '400px'
-                }}>
+                <pre className={styles.jsonPreview}>
                   {JSON.stringify(exportJson, null, 2)}
                 </pre>
               )}
             </div>
 
             {/* --- Actions --- */}
-            <div style={pageStyles.indicator.actionButtons}>
+            <div className={styles.actionButtons}>
               <button
                 type="button"
                 onClick={handleExecute}
