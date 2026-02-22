@@ -14,6 +14,7 @@ docker-compose up -d
 ```
 
 Cette commande va :
+
 - Créer et démarrer PostgreSQL
 - Construire et lancer le backend FastAPI
 - Construire et lancer le frontend React
@@ -21,9 +22,9 @@ Cette commande va :
 
 ### 2. Accéder à l'application
 
-- **Frontend** : http://localhost:5173
-- **Backend API** : http://localhost:8000
-- **Documentation API** : http://localhost:8000/docs
+- **Frontend** : <http://localhost:5173>
+- **Backend API** : <http://localhost:8000>
+- **Documentation API** : <http://localhost:8000/docs>
 - **PostgreSQL** : localhost:5433 (port externe, 5432 dans le conteneur)
 
 ### 3. Comptes de test
@@ -113,7 +114,7 @@ docker-compose up -d
 
 ## Structure Docker
 
-```
+```txt
 Codev/
 ├── docker-compose.yml          # Orchestration des services
 ├── src/
@@ -129,6 +130,7 @@ Codev/
 ## Services
 
 ### PostgreSQL
+
 - **Image** : postgres:15-alpine
 - **Port externe** : 5433 (pour éviter les conflits avec PostgreSQL local)
 - **Port interne** : 5432
@@ -138,12 +140,14 @@ Codev/
 - **Base de données** : polytech_indicateurs
 
 ### Backend (FastAPI)
+
 - **Port** : 8000
 - **Hot reload** : activé (--reload)
 - **Volume** : `./src/backend/uploads` (fichiers uploadés)
 - **Initialisation** : exécute automatiquement `init_db.py` au démarrage
 
 ### Frontend (React + Vite)
+
 - **Port** : 5173
 - **Hot reload** : activé
 - **Volume** : code source monté pour le développement
@@ -160,6 +164,7 @@ Les variables d'environnement sont définies dans `docker-compose.yml`. Pour les
 ### Mode développement
 
 Les volumes sont montés pour permettre le hot reload :
+
 - Le code backend est monté dans le conteneur
 - Le code frontend est monté dans le conteneur
 - Les modifications sont prises en compte automatiquement
@@ -167,6 +172,7 @@ Les volumes sont montés pour permettre le hot reload :
 ### Production
 
 Pour la production, modifiez les Dockerfiles pour :
+
 - Utiliser des images de build séparées
 - Optimiser les builds
 - Utiliser des serveurs de production (Nginx pour le frontend, Gunicorn pour le backend)
@@ -207,5 +213,6 @@ docker-compose up -d --build
 ## Performance
 
 Pour améliorer les performances en développement :
+
 - Utilisez Docker Desktop avec suffisamment de ressources allouées
 - Surveillez l'utilisation des ressources : `docker stats`

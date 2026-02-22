@@ -5,7 +5,8 @@
 Le projet a été réorganisé selon l'architecture définie dans `ARCHITECTURE.md`.
 
 ### Avant
-```
+
+```txt
 src/indicateurs/
 ├── backend/
 │   ├── main.py
@@ -18,7 +19,8 @@ src/indicateurs/
 ```
 
 ### Après
-```
+
+```txt
 src/
 ├── backend/
 │   ├── app/
@@ -64,6 +66,7 @@ src/
 ## Commandes de Lancement
 
 ### Backend
+
 ```bash
 cd src/backend
 source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
@@ -71,6 +74,7 @@ uvicorn app.main:app --reload
 ```
 
 ### Frontend
+
 ```bash
 cd src/frontend
 npm install  # Si première fois
@@ -80,6 +84,7 @@ npm run dev
 ## Fichiers Conservés
 
 Tous les fichiers développés ont été conservés et adaptés :
+
 - ✅ Tous les composants React
 - ✅ Tous les services backend
 - ✅ Le traducteur SQL (JsonToSqlTranslator)

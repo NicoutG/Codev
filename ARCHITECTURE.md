@@ -3,9 +3,11 @@
 ## 1. Présentation du Projet
 
 ### 1.1 Contexte
+
 Dans un but d'amélioration continue et de pertinence avec les besoins liés à l'insertion des diplômés Polytech Lyon, l'école établit un suivi statistique de ceux-ci. Pour ce faire, l'école utilise des données sur les populations étudiantes et diplômées (obtenues via de nombreux systèmes d'informations) et croise ces informations afin de pouvoir en tirer des analyses de performances de son activité d'enseignement et dégager les forces et pistes d'amélioration de l'offre de formation.
 
 ### 1.2 Objectif
+
 Réaliser un outil ergonomique, facilitant le traitement de ces volumes importants, afin de permettre l'accès à des formulaires de résultats simplifiés, utilisables par plusieurs services afin de dégager des plans d'amélioration et des outils de prise de décision pertinents.
 
 ## 2. Cahier des Charges
@@ -13,11 +15,13 @@ Réaliser un outil ergonomique, facilitant le traitement de ces volumes importan
 ### 2.1 Gestion des Utilisateurs
 
 #### 2.1.1 Types d'utilisateurs
+
 - **Consultant** : Peut lire les données et les indicateurs
 - **Éditeur** : Consultant + créer, éditer, supprimer les indicateurs et importer des données
 - **Admin** : Éditeur + créer, éditer, supprimer des utilisateurs
 
 #### 2.1.2 Fonctionnalités utilisateur
+
 - **Portail de connexion** :
   - Connexion (Login)
   - Changement de mot de passe
@@ -31,6 +35,7 @@ Réaliser un outil ergonomique, facilitant le traitement de ces volumes importan
 ### 2.2 Récupération des Données
 
 #### 2.2.1 Format des données
+
 - **Types de fichiers acceptés** : XLSX, CSV
 - **Contenu** : Données liées à l'insertion professionnelle des élèves
 - **Nomenclature** : Suivre le fichier nomenclature fourni en garantissant des noms de colonnes similaires pour garantir l'importation des données
@@ -40,11 +45,13 @@ Réaliser un outil ergonomique, facilitant le traitement de ces volumes importan
   - Si le code n'existe pas → création de la ligne
 
 #### 2.2.2 Stockage BDD
+
 - Base de données PostgreSQL
 - Structure de tables dynamique basée sur les fichiers importés
 - Gestion des métadonnées (noms de tables, colonnes, types)
 
 #### 2.2.3 Fonctionnalités
+
 - **Import de données** :
   - Importer les fichiers Excel/CSV
 - **Liste des données** :
@@ -54,18 +61,22 @@ Réaliser un outil ergonomique, facilitant le traitement de ces volumes importan
 ### 2.3 Traitement des Données
 
 #### 2.3.1 Principe
+
 Recréer des requêtes SQL à partir d'un langage simplifié.
 
 #### 2.3.2 Sélection du sujet
+
 - Choix des tables que l'on étudie
 - Join automatique sur les colonnes de même nom si on sélectionne plusieurs tables dans le sujet
 
 #### 2.3.3 Définition des colonnes
+
 - **Regroupement par colonne** : Regroupement des lignes qui ont des noms similaires sur une colonne
 - **Regroupement par cas** : Regroupement des lignes qui respectent les mêmes conditions
 - **Agrégation** : Calcul à appliquer sur tous les regroupements
 
 #### 2.3.4 Fonctionnalités
+
 - **Ajout et édition d'indicateurs** (Éditeur/Admin) :
   - Création d'indicateur
   - Édition d'indicateur
@@ -76,11 +87,13 @@ Recréer des requêtes SQL à partir d'un langage simplifié.
 ### 2.4 Affichage des Données
 
 #### 2.4.1 Filtrage
+
 - **Sélection de période** : Sélectionner une période pour les résultats
 - **Sélection d'indicateurs** : Sélectionner des indicateurs à inclure
 - **Sélection de types de graphiques** : Sélectionner le type de représentation graphique
 
 #### 2.4.2 Création du résultat
+
 - **Affichage du rapport** : Afficher le rapport généré
 - **Export du rapport** : Exporter le rapport (formats à définir : PDF, Excel, CSV)
 
@@ -89,6 +102,7 @@ Recréer des requêtes SQL à partir d'un langage simplifié.
 ### 3.1 Stack Technique
 
 #### 3.1.1 Backend
+
 - **Framework** : FastAPI (Python)
 - **Base de données** : PostgreSQL
 - **ORM** : SQLAlchemy (recommandé) ou psycopg2 pour requêtes directes
@@ -97,6 +111,7 @@ Recréer des requêtes SQL à partir d'un langage simplifié.
 - **Import de fichiers** : pandas, openpyxl (pour XLSX), csv (standard)
 
 #### 3.1.2 Frontend
+
 - **Framework** : React (TypeScript)
 - **Build tool** : Vite
 - **Routing** : React Router DOM
@@ -105,12 +120,13 @@ Recréer des requêtes SQL à partir d'un langage simplifié.
 - **UI Components** : Material-UI, Ant Design, ou Tailwind CSS (à choisir)
 
 #### 3.1.3 Base de données
+
 - **SGBD** : PostgreSQL
 - **Migrations** : Alembic (recommandé avec SQLAlchemy)
 
 ### 3.2 Structure des Répertoires
 
-```
+```txt
 Codev/
 ├── src/
 │   ├── backend/
@@ -328,6 +344,7 @@ Codev/
 ### 4.1 Tables Système
 
 #### 4.1.1 users
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -342,6 +359,7 @@ CREATE TABLE users (
 ```
 
 #### 4.1.2 indicators
+
 ```sql
 CREATE TABLE indicators (
     id SERIAL PRIMARY KEY,
@@ -355,6 +373,7 @@ CREATE TABLE indicators (
 ```
 
 #### 4.1.3 data_imports
+
 ```sql
 CREATE TABLE data_imports (
     id SERIAL PRIMARY KEY,
@@ -370,6 +389,7 @@ CREATE TABLE data_imports (
 ### 4.2 Tables Dynamiques
 
 Les tables de données sont créées dynamiquement lors de l'import :
+
 - Nom de table basé sur le fichier source ou configuré
 - Colonnes basées sur les colonnes du fichier
 - Colonne "code" obligatoire (clé unique)
@@ -378,11 +398,13 @@ Les tables de données sont créées dynamiquement lors de l'import :
 ## 5. API Endpoints
 
 ### 5.1 Authentification (`/api/v1/auth`)
+
 - `POST /login` - Connexion
 - `POST /change-password` - Changement de mot de passe
 - `POST /refresh` - Rafraîchir token
 
 ### 5.2 Utilisateurs (`/api/v1/users`) - Admin uniquement
+
 - `GET /` - Liste utilisateurs
 - `POST /` - Créer utilisateur
 - `GET /{id}` - Détails utilisateur
@@ -391,6 +413,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - `PUT /{id}/role` - Modifier rôle
 
 ### 5.3 Données (`/api/v1/data`)
+
 - `POST /import` - Importer fichier (Éditeur/Admin)
 - `GET /` - Liste des imports (Éditeur/Admin)
 - `GET /tables` - Liste des tables disponibles
@@ -398,11 +421,13 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - `DELETE /tables/{table_name}` - Supprimer table (Éditeur/Admin)
 
 ### 5.4 Métadonnées (`/api/v1/metadata`)
+
 - `GET /tables` - Liste des tables
 - `GET /tables/{table}/columns` - Colonnes d'une table
 - `POST /columns` - Colonnes communes de plusieurs tables
 
 ### 5.5 Indicateurs (`/api/v1/indicators`)
+
 - `GET /` - Liste indicateurs
 - `POST /` - Créer indicateur (Éditeur/Admin)
 - `GET /{id}` - Détails indicateur
@@ -411,6 +436,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - `POST /{id}/execute` - Exécuter indicateur (génère SQL et retourne résultats)
 
 ### 5.6 Rapports (`/api/v1/reports`)
+
 - `POST /generate` - Générer rapport
 - `GET /{id}` - Récupérer rapport
 - `POST /{id}/export` - Exporter rapport (PDF/Excel)
@@ -418,6 +444,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 ## 6. Flux de Données
 
 ### 6.1 Import de Données
+
 1. Utilisateur (Éditeur/Admin) upload un fichier XLSX/CSV
 2. Backend parse le fichier (pandas)
 3. Validation selon nomenclature
@@ -427,6 +454,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 7. Enregistrement métadonnées import
 
 ### 6.2 Création d'Indicateur
+
 1. Utilisateur (Éditeur/Admin) sélectionne tables
 2. Backend retourne colonnes disponibles
 3. Utilisateur définit colonnes (group_by, case, aggregation)
@@ -435,6 +463,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 6. Optionnel : prévisualisation résultats
 
 ### 6.3 Génération de Rapport
+
 1. Utilisateur sélectionne indicateurs
 2. Utilisateur sélectionne période (filtres)
 3. Utilisateur sélectionne type graphique
@@ -446,17 +475,20 @@ Les tables de données sont créées dynamiquement lors de l'import :
 ## 7. Sécurité
 
 ### 7.1 Authentification
+
 - JWT (JSON Web Tokens)
 - Tokens avec expiration
 - Refresh tokens
 - Hashage mots de passe (bcrypt)
 
 ### 7.2 Autorisation
+
 - Middleware FastAPI pour vérifier rôles
 - Permissions par endpoint
 - Vérification propriétaire (pour modification/suppression)
 
 ### 7.3 Validation
+
 - Validation côté client (React)
 - Validation côté serveur (Pydantic)
 - Validation SQL (prévention injection)
@@ -464,9 +496,11 @@ Les tables de données sont créées dynamiquement lors de l'import :
 ## 8. Méthodologie de Développement
 
 ### 8.1 Phase 1 : Infrastructure de Base
-**Durée estimée : 2-3 semaines**
+
+**Durée estimée :** 2-3 semaines
 
 #### Backend
+
 - Configuration FastAPI
 - Configuration PostgreSQL
 - Modèles SQLAlchemy (users, indicators, data_imports)
@@ -475,6 +509,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - Migrations Alembic
 
 #### Frontend
+
 - Configuration React + TypeScript + Vite
 - Routing
 - Authentification (login, change password)
@@ -484,13 +519,16 @@ Les tables de données sont créées dynamiquement lors de l'import :
 **Stack** : FastAPI, PostgreSQL, React, TypeScript, JWT
 
 **Répartition** :
+
 - Développeur 1 : Backend (auth, users)
 - Développeur 2 : Frontend (auth, users UI)
 
 ### 8.2 Phase 2 : Import et Gestion des Données
-**Durée estimée : 2-3 semaines**
+
+**Durée estimée :** 2-3 semaines
 
 #### Backend
+
 - Parser XLSX/CSV
 - Validation nomenclature
 - Création tables dynamiques
@@ -499,19 +537,23 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - API données
 
 #### Frontend
+
 - Interface import fichiers
 - Liste des données importées
 - Visualiseur données
 - Gestion tables
 
 **Répartition** :
+
 - Développeur 1 : Backend (import, parsing)
 - Développeur 2 : Frontend (import UI, visualisation)
 
 ### 8.3 Phase 3 : Création d'Indicateurs
-**Durée estimée : 3-4 semaines**
+
+**Durée estimée :** 3-4 semaines
 
 #### Backend
+
 - Amélioration JsonToSqlTranslator
 - Gestion joins automatiques
 - API indicateurs (CRUD)
@@ -519,6 +561,7 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - Validation requêtes
 
 #### Frontend
+
 - Éditeur indicateurs complet
 - Sélection tables
 - Édition colonnes (group_by, case, aggregation)
@@ -526,29 +569,35 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - Prévisualisation SQL
 
 **Répartition** :
+
 - Développeur 1 : Backend (SQL translator, API)
 - Développeur 2 : Frontend (éditeur indicateurs)
 
 ### 8.4 Phase 4 : Rapports et Visualisation
-**Durée estimée : 2-3 semaines**
+
+**Durée estimée :** 2-3 semaines
 
 #### Backend
+
 - API génération rapports
 - Filtres (période, indicateurs)
 - Export PDF/Excel
 
 #### Frontend
+
 - Constructeur rapports
 - Sélecteur graphiques
 - Rendu graphiques (Chart.js/Recharts)
 - Export rapports
 
 **Répartition** :
+
 - Développeur 1 : Backend (rapports, export)
 - Développeur 2 : Frontend (visualisation, graphiques)
 
 ### 8.5 Phase 5 : Tests et Optimisation
-**Durée estimée : 1-2 semaines**
+
+**Durée estimée :** 1-2 semaines
 
 - Tests unitaires
 - Tests d'intégration
@@ -558,12 +607,13 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - Documentation
 
 **Répartition** :
+
 - Développeur 1 : Tests backend, optimisation
 - Développeur 2 : Tests frontend, optimisation
 
 ## 9. Planning Gantt (Estimation)
 
-```
+```txt
 Semaine 1-3  : Phase 1 - Infrastructure
 Semaine 4-6  : Phase 2 - Import données
 Semaine 7-10 : Phase 3 - Indicateurs
@@ -571,12 +621,13 @@ Semaine 11-13: Phase 4 - Rapports
 Semaine 14-15: Phase 5 - Tests et finition
 ```
 
-**Total estimé : 15 semaines (environ 4 mois)**
+**Total estimé :** 15 semaines (environ 4 mois)
 
 ## 10. Technologies et Dépendances
 
 ### 10.1 Backend (requirements.txt)
-```
+
+```txt
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
@@ -593,6 +644,7 @@ python-dotenv==1.0.0
 ```
 
 ### 10.2 Frontend (package.json)
+
 ```json
 {
   "dependencies": {
@@ -618,24 +670,28 @@ python-dotenv==1.0.0
 ## 11. Points d'Attention
 
 ### 11.1 Performance
+
 - Pagination pour grandes tables
 - Index sur colonne "code"
 - Cache métadonnées
 - Optimisation requêtes SQL complexes
 
 ### 11.2 Sécurité
+
 - Validation stricte fichiers uploadés
 - Sanitization noms de tables/colonnes
 - Prévention injection SQL
 - Rate limiting sur endpoints sensibles
 
 ### 11.3 Gestion d'Erreurs
+
 - Messages d'erreur clairs
 - Logging approprié
 - Gestion fichiers corrompus
 - Rollback en cas d'échec import
 
 ### 11.4 UX
+
 - Feedback utilisateur (loading, erreurs)
 - Validation en temps réel
 - Prévisualisation avant sauvegarde

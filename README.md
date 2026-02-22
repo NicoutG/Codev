@@ -26,9 +26,10 @@ docker-compose logs -f
 ```
 
 L'application sera accessible sur :
-- **Frontend** : http://localhost:5173
-- **Backend API** : http://localhost:8000
-- **Documentation API** : http://localhost:8000/docs
+
+- **Frontend** : <http://localhost:5173>
+- **Backend API** : <http://localhost:8000>
+- **Documentation API** : <http://localhost:8000/docs>
 
 ### Comptes de test
 
@@ -74,7 +75,7 @@ npm run dev
 
 ## Structure du projet
 
-```
+```txt
 Codev/
 ├── docker-compose.yml          # Configuration Docker
 ├── src/
