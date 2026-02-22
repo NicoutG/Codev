@@ -117,6 +117,13 @@
   max-height: 600px;
 }
 
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
 .resultHeader {
   display: flex;
   justify-content: space-between;
@@ -226,4 +233,21 @@
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+}
+
+.backButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.backButton:hover {
+  background-color: #e2e8f0;
+  color: #475569
 }

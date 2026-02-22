@@ -5,7 +5,6 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, Indicator } from '../api/indicators';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
 import styles from '../styles/pages/IndicatorView.module.css';
 
 interface ExecutionResult {
@@ -133,7 +132,7 @@ const IndicatorViewContent: React.FC = () => {
         {/* Contenu des onglets */}
         {activeTab === 'config' && (
           <div className={styles.card}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '1rem' }}>Configuration de l'indicateur</h2>
+            <h2 className={styles.sectionTitle}>Configuration de l'indicateur</h2>
             <pre className={styles.preBlock}>{JSON.stringify(indicator.indicator, null, 2)}</pre>
           </div>
         )}
@@ -151,7 +150,7 @@ const IndicatorViewContent: React.FC = () => {
               <>
                 <div className={styles.resultHeader}>
                   <div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>Résultats de l'exécution</h2>
+                    <h2 className={styles.sectionTitle}>Résultats de l'exécution</h2>
                     <p className={styles.resultCount}>{executionResult.row_count} ligne{executionResult.row_count > 1 ? 's' : ''} retournée{executionResult.row_count > 1 ? 's' : ''}</p>
                   </div>
                 </div>
@@ -197,35 +196,8 @@ const IndicatorViewContent: React.FC = () => {
           </div>
         )}
 
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'flex-end'
-        }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#f1f5f9',
-              color: '#64748b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#e2e8f0';
-              e.currentTarget.style.color = '#475569';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9';
-              e.currentTarget.style.color = '#64748b';
-            }}
-          >
-            Retour à la liste
-          </button>
+        <div className={styles.footerRow}>
+          <button onClick={() => navigate('/')} className={styles.backButton}>Retour à la liste</button>
         </div>
       </div>
     </Layout>
