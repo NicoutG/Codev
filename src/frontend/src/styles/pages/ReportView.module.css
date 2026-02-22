@@ -220,3 +220,17 @@
   flex-direction: column;
   gap: 2rem
 }
+
+.errorText {
+  color: #ef4444;
+  margin-bottom: 1rem
+}
+
+.flex1 {
+  flex: 1
+}
+
+.rowGap {
+  display: flex;
+  gap: 0.5rem
+}

@@ -122,7 +122,7 @@ const ReportViewContent: React.FC = () => {
     return (
       <Layout>
         <div className={`${styles.indicatorCard} ${styles.centerText}`}>
-          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>
+          <p className={styles.errorText}>{error}</p>
           <button onClick={() => navigate('/reports')} className="btn btn-primary">Retour à la liste</button>
         </div>
       </Layout>
@@ -135,7 +135,7 @@ const ReportViewContent: React.FC = () => {
     <Layout>
       <div>
         <div className={styles.header}>
-          <div style={{ flex: 1 }}>
+          <div className={styles.flex1}>
             <h1 className={styles.title}>{report.title}</h1>
             {report.description && <p className={styles.subtitle}>{report.description}</p>}
             <div className={styles.infoSmall}>{report.indicators.length} indicateur{report.indicators.length > 1 ? 's' : ''} dans ce rapport</div>
@@ -148,7 +148,7 @@ const ReportViewContent: React.FC = () => {
               <Link to={`/reports/${report.id}/edit`} className={styles.linkButton}>Modifier</Link>
             )}
             {generatedReport && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className={styles.rowGap}>
                 {exportFormats.map(format => (
                   <button key={format.value} onClick={() => handleExport(format.value)} className="btn btn-secondary">
                     📥 {format.label}
