@@ -6,7 +6,6 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, Report, ReportGenerateResponse } from '../api/reports';
 import { Chart } from '../components/charts/Chart';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
 import styles from '../styles/pages/ReportView.module.css';
 
 const exportFormats = [
@@ -122,7 +121,7 @@ const ReportViewContent: React.FC = () => {
   if (error && !report) {
     return (
       <Layout>
-        <div className={styles.indicatorCard} style={{ textAlign: 'center' }}>
+        <div className={`${styles.indicatorCard} ${styles.centerText}`}>
           <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error}</p>
           <button onClick={() => navigate('/reports')} className="btn btn-primary">Retour à la liste</button>
         </div>
@@ -168,7 +167,7 @@ const ReportViewContent: React.FC = () => {
             <p className={styles.generatingText}>Génération du rapport en cours...</p>
           </div>
         ) : generatedReport ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className={styles.resultsContainer}>
             {generatedReport.results.map((result, idx) => {
               const indicatorConfig = report.indicators.find(i => i.id === result.indicator_id);
               const hasError = result.execution_result.error;
@@ -184,7 +183,7 @@ const ReportViewContent: React.FC = () => {
                     <>
                       {/* Graphique si configuré */}
                       {indicatorConfig?.chart_type && (
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div className={styles.chartWrapper}>
                           <Chart
                             type={indicatorConfig.chart_type as 'bar' | 'line' | 'pie' | 'area'}
                             data={result.execution_result.rows}
@@ -233,53 +232,10 @@ const ReportViewContent: React.FC = () => {
             })}
           </div>
         ) : (
-          <div style={{
-            padding: '4rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <p style={{
-              fontSize: '1.125rem',
-              color: '#64748b',
-              marginBottom: '1rem'
-            }}>
-              Aucun résultat généré
-            </p>
-            <p style={{
-              fontSize: '0.875rem',
-              color: '#94a3b8',
-              marginBottom: '1.5rem'
-            }}>
-              Cliquez sur "Générer le rapport" pour exécuter tous les indicateurs et afficher les résultats
-            </p>
-            <button
-              onClick={generateReport}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#1e40af',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.9375rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e3a8a';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e40af';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Générer le rapport
-            </button>
+          <div className={styles.noGenerated}>
+            <p className={styles.noGeneratedTitle}>Aucun résultat généré</p>
+            <p className={styles.noGeneratedSubtitle}>Cliquez sur "Générer le rapport" pour exécuter tous les indicateurs et afficher les résultats</p>
+            <button onClick={generateReport} className="btn btn-success">Générer le rapport</button>
           </div>
         )}
 
