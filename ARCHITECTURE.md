@@ -611,14 +611,29 @@ Les tables de données sont créées dynamiquement lors de l'import :
 - Développeur 1 : Tests backend, optimisation
 - Développeur 2 : Tests frontend, optimisation
 
-## 9. Planning Gantt (Estimation)
+## 9. Planning Gantt (estimation)
 
-```txt
-Semaine 1-3  : Phase 1 - Infrastructure
-Semaine 4-6  : Phase 2 - Import données
-Semaine 7-10 : Phase 3 - Indicateurs
-Semaine 11-13: Phase 4 - Rapports
-Semaine 14-15: Phase 5 - Tests et finition
+```mermaid
+gantt
+  title Planning de Développement
+  dateFormat  YYYY-MM-DD
+  tickInterval 2week
+  todayMarker off
+  section 1. Infrastructure
+    Backend Auth & Users :done, b1, 2025-11-10, 3w
+    Frontend Auth & Users UI :done, f1, 2025-11-10, 3w
+  section 2. Import données
+    Backend Import & Parsing :b2, after b1, 3w
+    Frontend Import UI :f2, after f1, 3w
+  section 3. Indicateurs
+    Backend SQL Translator & API :b3, after b2, 4w
+    Frontend Éditeur Indicateurs :f3, after f2, 4w
+  section 4. Rapports
+    Backend Rapports & Export :b4, after b3, 3w
+    Frontend Visualisation & Graphiques :f4, after f3, 3w
+  section 5. Tests et finition
+    Tests Unitaires & Intégration :b5, after b4, 2w
+    Tests E2E & Optimisation :f5, after f4, 2w
 ```
 
 **Total estimé :** 15 semaines (environ 4 mois)
