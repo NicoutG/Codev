@@ -27,15 +27,18 @@
   transition: all 0.2s ease;
   cursor: pointer;
 }
+
 .createButton.primary {
   background-color: var(--primary);
   color: white;
   box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);
 }
+
 .createButton.primary:hover {
   background-color: var(--primary-dark);
   transform: translateY(-1px);
 }
+
 .createButton.secondary {
   background-color: #f1f5f9;
   color: var(--text-secondary);
@@ -56,7 +59,7 @@
   padding: 2rem;
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   border: 1px solid var(--border);
 }
 
@@ -85,6 +88,7 @@
   font-weight: 600;
   color: var(--text-primary);
 }
+
 .usernameSub {
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -104,7 +108,7 @@
 .tableWrapper {
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
   overflow: hidden;
   border: 1px solid var(--border);
 }
@@ -114,8 +118,9 @@
   padding: 4rem;
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
 .spinner {
   display: inline-block;
   width: 40px;
