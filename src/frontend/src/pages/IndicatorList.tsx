@@ -5,7 +5,6 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, Indicator } from '../api/indicators';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
 import styles from '../styles/pages/IndicatorList.module.css';
 
 const IndicatorListContent: React.FC = () => {
