@@ -5,7 +5,6 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, Report, ReportUpdate, ReportIndicatorConfig } from '../api/reports';
 import { indicatorsApi, Indicator } from '../api/indicators';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
 import styles from '../styles/pages/ReportEdit.module.css';
 
 const chartTypes = [
@@ -173,7 +172,7 @@ const ReportEditContent: React.FC = () => {
     return (
       <Layout>
         <div className={styles.notFound}>
-          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>Rapport introuvable</p>
+          <p className={styles.notFoundError}>Rapport introuvable</p>
           <button onClick={() => navigate('/reports')} className="btn btn-primary">Retour à la liste</button>
         </div>
       </Layout>
@@ -203,7 +202,7 @@ const ReportEditContent: React.FC = () => {
           <textarea id="report-description" value={description} onChange={(e) => setDescription(e.target.value)} className={styles.textareaCustom} />
         </div>
 
-        <div style={{ marginBottom: '2rem' }}>
+        <div className={styles.sectionSpacing}>
           <h2 className={styles.sectionTitle}>Indicateurs sélectionnés ({selectedIndicators.size})</h2>
 
           {sortedSelected.length > 0 ? (
@@ -215,7 +214,7 @@ const ReportEditContent: React.FC = () => {
                 return (
                   <div key={indicatorId} className={styles.selectedItem}>
                     <div className={styles.itemHeader}>
-                      <div style={{ flex: 1 }}>
+                      <div className={styles.flex1}>
                         <h3 className={styles.itemTitle}>{indicator.title}</h3>
                         {indicator.description && <p className={styles.itemDesc}>{indicator.description}</p>}
                       </div>
@@ -238,21 +237,12 @@ const ReportEditContent: React.FC = () => {
               })}
             </div>
           ) : (
-            <p style={{
-              padding: '2rem',
-              textAlign: 'center',
-              color: '#94a3b8',
-              backgroundColor: '#f8fafc',
-              borderRadius: '8px',
-              border: '1px solid #e2e8f0'
-            }}>
-              Aucun indicateur sélectionné. Sélectionnez des indicateurs ci-dessous.
-            </p>
+            <p className={styles.centerPadded}>Aucun indicateur sélectionné. Sélectionnez des indicateurs ci-dessous.</p>
           )}
         </div>
 
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1e293b', marginBottom: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>Indicateurs disponibles ({availableIndicators.length})</h2>
+        <div className={styles.sectionSpacing}>
+          <h2 className={styles.availableTitle}>Indicateurs disponibles ({availableIndicators.length})</h2>
           <div className={styles.availableGrid}>
             {availableIndicators.map((indicator) => {
               const isSelected = selectedIndicators.has(indicator.id);
@@ -262,14 +252,14 @@ const ReportEditContent: React.FC = () => {
                   onClick={() => toggleIndicator(indicator)}
                   className={`${styles.indicatorCard} ${isSelected ? styles.indicatorSelected : ''}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+                  <div className={styles.rowStartGap}>
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => {}}
                       className={styles.checkbox}
                     />
-                    <div style={{ flex: 1 }}>
+                    <div className={styles.flex1}>
                       <h3 className={styles.indicatorTitle}>{indicator.title}</h3>
                       {indicator.description && <p className={styles.indicatorDesc}>{indicator.description}</p>}
                     </div>
