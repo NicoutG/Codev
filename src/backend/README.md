@@ -12,9 +12,10 @@ pip install -r requirements.txt
 ## Configuration
 
 1. Créez un fichier `.env` à partir de `.env.example` :
-```bash
-cp .env.example .env
-```
+
+    ```bash
+    cp .env.example .env
+    ```
 
 2. Modifiez les variables d'environnement selon votre configuration PostgreSQL.
 
@@ -23,18 +24,21 @@ cp .env.example .env
 1. Assurez-vous que PostgreSQL est installé et en cours d'exécution.
 
 2. Créez la base de données :
-```sql
-CREATE DATABASE polytech_indicateurs;
-```
+
+    ```sql
+    CREATE DATABASE polytech_indicateurs;
+    ```
 
 3. Initialisez la base de données et créez les comptes de test :
-```bash
-cd src/backend
-source venv/bin/activate
-python init_db.py
-```
+
+    ```bash
+    cd src/backend
+    source venv/bin/activate
+    python init_db.py
+    ```
 
 Cela créera :
+
 - **consultant** / consultant123 (Consultant)
 - **editeur** / editeur123 (Éditeur)
 - **admin** / admin123 (Administrateur)
@@ -52,17 +56,20 @@ Le serveur sera accessible sur `http://localhost:8000`
 ## API Documentation
 
 Une fois le serveur lancé, accédez à :
+
 - Documentation Swagger : `http://localhost:8000/docs`
 - Documentation ReDoc : `http://localhost:8000/redoc`
 
 ## Endpoints
 
 ### Authentification
+
 - `POST /api/v1/auth/login` - Connexion
 - `POST /api/v1/auth/change-password` - Changer le mot de passe
 - `GET /api/v1/auth/me` - Informations utilisateur actuel
 
 ### Utilisateurs (Admin uniquement)
+
 - `GET /api/v1/users/` - Liste des utilisateurs
 - `POST /api/v1/users/` - Créer un utilisateur
 - `GET /api/v1/users/{id}` - Détails d'un utilisateur
@@ -71,13 +78,14 @@ Une fois le serveur lancé, accédez à :
 - `DELETE /api/v1/users/{id}` - Supprimer un utilisateur
 
 ### Métadonnées
+
 - `GET /api/v1/metadata/tables` - Liste des tables
 - `GET /api/v1/metadata/tables/{table}/columns` - Colonnes d'une table
 - `POST /api/v1/metadata/columns` - Colonnes communes
 
 ## Structure
 
-```
+```txt
 src/backend/
 ├── app/
 │   ├── main.py              # Point d'entrée FastAPI

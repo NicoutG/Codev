@@ -18,7 +18,7 @@ L'application sera accessible sur `http://localhost:5173`
 
 ## Structure
 
-```
+```txt
 src/frontend/
 ├── src/
 │   ├── main.jsx             # Point d'entrée React

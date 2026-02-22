@@ -17,66 +17,75 @@ DATABASE_URL=postgresql://jules@localhost:5432/polytech_indicateurs
 ## Solution 2 : Créer un utilisateur PostgreSQL sans mot de passe
 
 1. Trouvez où PostgreSQL est installé et connectez-vous :
-```bash
-# Si installé via Homebrew
-/opt/homebrew/bin/psql postgres
 
-# Ou essayez
-psql -U postgres postgres
-```
+    ```bash
+    # Si installé via Homebrew
+    /opt/homebrew/bin/psql postgres
+
+    # Ou essayez
+    psql -U postgres postgres
+    ```
 
 2. Créez un utilisateur sans mot de passe :
-```sql
-CREATE USER jules WITH CREATEDB;
-ALTER USER jules WITH PASSWORD NULL;
-\q
-```
+
+    ```sql
+    CREATE USER jules WITH CREATEDB;
+    ALTER USER jules WITH PASSWORD NULL;
+    \q
+    ```
 
 3. Modifiez `.env` :
-```env
-DATABASE_URL=postgresql://jules@localhost:5432/polytech_indicateurs
-```
+
+    ```env
+    DATABASE_URL=postgresql://jules@localhost:5432/polytech_indicateurs
+    ```
 
 ## Solution 3 : Définir un mot de passe pour postgres
 
 1. Connectez-vous à PostgreSQL :
-```bash
-psql postgres
-```
+
+    ```bash
+    psql postgres
+    ```
 
 2. Définissez un mot de passe :
-```sql
-ALTER USER postgres WITH PASSWORD 'votre_mot_de_passe';
-\q
-```
+
+    ```sql
+    ALTER USER postgres WITH PASSWORD 'votre_mot_de_passe';
+    \q
+    ```
 
 3. Modifiez `.env` :
-```env
-DATABASE_URL=postgresql://postgres:votre_mot_de_passe@localhost:5432/polytech_indicateurs
-```
+
+    ```env
+    DATABASE_URL=postgresql://postgres:votre_mot_de_passe@localhost:5432/polytech_indicateurs
+    ```
 
 ## Solution 4 : Utiliser la méthode trust (développement uniquement)
 
 1. Trouvez le fichier `pg_hba.conf` :
-```bash
-# Sur macOS avec Homebrew
-/opt/homebrew/var/postgresql@15/pg_hba.conf
-# Ou
-/usr/local/var/postgres/pg_hba.conf
-```
+
+    ```bash
+    # Sur macOS avec Homebrew
+    /opt/homebrew/var/postgresql@15/pg_hba.conf
+    # Ou
+    /usr/local/var/postgres/pg_hba.conf
+    ```
 
 2. Modifiez la ligne pour localhost :
-```
-# Changez de:
-host    all             all             127.0.0.1/32            scram-sha-256
-# À:
-host    all             all             127.0.0.1/32            trust
-```
+
+    ```conf
+    # Changez de:
+    host    all             all             127.0.0.1/32            scram-sha-256
+    # À:
+    host    all             all             127.0.0.1/32            trust
+    ```
 
 3. Redémarrez PostgreSQL :
-```bash
-brew services restart postgresql@15
-```
+
+    ```bash
+    brew services restart postgresql@15
+    ```
 
 ## Créer la base de données
 
