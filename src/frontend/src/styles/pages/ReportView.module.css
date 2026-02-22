@@ -1,0 +1,166 @@
+/* Styles for ReportView */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.infoSmall {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.linkButton {
+  padding: 0.75rem 1.5rem;
+  background-color: #e0e7ff;
+  color: #1e40af;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(30,64,175,0.1);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.linkButton:hover { background-color: #c7d2fe; transform: translateY(-1px); }
+
+.errorBox {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  font-size: 0.875rem;
+}
+
+.generating {
+  text-align: center;
+  padding: 4rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid var(--border);
+}
+.generatingSpinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e2e8f0;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+.generatingText { color: var(--text-secondary); }
+
+.indicatorCard {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  border: 1px solid var(--border);
+  padding: 2rem;
+}
+.indicatorHeader {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--border);
+}
+.indicatorTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+.indicatorError {
+  padding: 0.75rem;
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.chartWrapper { margin-bottom: 2rem; }
+
+.resultsWrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: white;
+}
+.resultsTable {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+.resultsHeaderRow { background-color: #f8fafc; }
+.resultsHeaderCell {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--border);
+}
+.resultsCell {
+  padding: 0.875rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.resultsRowHover:hover { background-color: #f8fafc; }
+
+.resultsCount { margin-top: 1rem; font-size: 0.875rem; color: var(--text-secondary); text-align: right; }
+
+.emptyResult {
+  text-align: center;
+  padding: 3rem;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.emptyResultText { font-size: 1rem; color: var(--text-secondary); }
+
+.noGenerated {
+  padding: 4rem;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.noGeneratedTitle { font-size: 1.125rem; color: var(--text-secondary); margin-bottom: 1rem; }
+.noGeneratedSubtitle { font-size: 0.875rem; color: #94a3b8; margin-bottom: 1.5rem; }
+
+.footerActions { margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end; }
