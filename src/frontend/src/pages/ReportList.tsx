@@ -47,7 +47,7 @@ const ReportListContent: React.FC = () => {
       <Layout>
         <div className={commonStyles.loadingContainer as any}>
           <div className={commonStyles.loadingSpinner as any} />
-          <p style={{ color: 'var(--text-secondary)' }}>Chargement des rapports...</p>
+          <p className={styles.loadingText}>Chargement des rapports...</p>
         </div>
       </Layout>
     );
@@ -77,7 +77,7 @@ const ReportListContent: React.FC = () => {
           <div className={styles.grid}>
             {reports.map((report) => (
               <div key={report.id} className={styles.card}>
-                <div style={{ flex: 1 }}>
+                <div className={styles.cardBody}>
                   <h3 className={styles.cardTitle}>{report.title}</h3>
                   <p className={styles.cardDesc}>{report.description || 'Pas de description.'}</p>
                   <div className={styles.cardInfo}>{report.indicators.length} indicateur{report.indicators.length > 1 ? 's' : ''}</div>

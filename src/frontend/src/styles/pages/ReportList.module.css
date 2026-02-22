@@ -158,3 +158,11 @@
 .deleteBtn:hover {
   background-color: #fca5a5;
 }
+
+.cardBody {
+  flex: 1
+}
+
+.loadingText {
+  color: var(--text-secondary)
+}
