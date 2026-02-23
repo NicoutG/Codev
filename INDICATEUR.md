@@ -25,8 +25,9 @@ Cette documentation explique comment créer et configurer un indicateur dans l'a
 
 1. **Choisir la source de données** :
    - Sélectionnez la ou les tables contenant les informations à analyser (ex. `Insertion`, `Mobilité`, `Etudiant`).
-2. **Filtrer les données (facultatif)** :
-   - Vous pouvez ajouter des filtres pour ne prendre en compte qu'une partie des données.
+   - Les tables `Mobilité` et `Etudiant` peuvent être sélectionnées en même temps. La jointure est automatiquement faite sur `id_polytech`.
+2. **Filtrer les données** :
+   - Vous pouvez ajouter des conditions sur les tables pour ne prendre en compte qu'une partie des données.
 
 ---
 
