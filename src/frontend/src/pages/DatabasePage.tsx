@@ -8,6 +8,7 @@ import { exportsApi } from '../api/exports';
 import { dataApi, TableDataRow, TableDataResponse } from '../api/data';
 import { commonStyles } from '../styles/common';
 import { pageStyles } from '../styles/pages';
+import styles from '../styles/pages/DatabasePage.module.css';
 
 const DatabasePageContent: React.FC = () => {
   const { isEditeur } = useAuth();
@@ -221,25 +222,9 @@ const DatabasePageContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={{
-          textAlign: 'center',
-          padding: '4rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'inline-block',
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e2e8f0',
-            borderTopColor: '#1e40af',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Chargement des tables...</p>
+        <div className={styles.loadingCard}>
+          <div className={styles.loadingSpinner} />
+          <p className={styles.loadingText}>Chargement des tables...</p>
         </div>
       </Layout>
     );
@@ -249,7 +234,7 @@ const DatabasePageContent: React.FC = () => {
     <Layout>
       <div>
 
-        <div style={{display: "flex", justifyContent: "space-between"}}>
+        <div className={styles.topRow}>
           <div style={commonStyles.pageHeader}>
             <h1 style={commonStyles.pageTitle}>
               Base de données
@@ -260,17 +245,7 @@ const DatabasePageContent: React.FC = () => {
           </div>
           <div>
 
-           <button
-              onClick={handleDownloadNomenclature}
-              style={commonStyles.buttonSecondary}
-              onMouseEnter={(e) => {
-                Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#f1f5f9';
-                e.currentTarget.style.color = '#64748b';
-              }}
-              >
+           <button onClick={handleDownloadNomenclature} className={styles.nomenclatureBtn}>
               📥 Nomenclature
             </button>
           </div>
@@ -338,25 +313,7 @@ const DatabasePageContent: React.FC = () => {
                             setCurrentPage(1);
                           }
                         }}
-                        style={commonStyles.select}
-                        onFocus={(e) => {
-                          Object.assign(e.target.style, commonStyles.selectFocus);
-                        }}
-                        onBlur={(e) => {
-                          e.target.style.borderColor = '#e2e8f0';
-                          e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                        }}
-                        onMouseEnter={(e) => {
-                          if (document.activeElement !== e.target) {
-                            Object.assign(e.target.style, commonStyles.selectHover);
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (document.activeElement !== e.target) {
-                            e.target.style.borderColor = '#e2e8f0';
-                            e.target.style.backgroundColor = 'white';
-                          }
-                        }}
+                        className={styles.select}
                       >
                         {tables.map((table) => (
                           <option key={table} value={table}>
@@ -367,39 +324,7 @@ const DatabasePageContent: React.FC = () => {
                     </div>
                     {isEditeur && (
                       <>
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          disabled={isLoadingImportExport}
-                          style={{
-                            padding: '0.75rem 1.5rem',
-                            backgroundColor: isLoadingImportExport ? '#94a3b8' : '#10b981',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '8px',
-                            fontSize: '0.875rem',
-                            fontWeight: '600',
-                            cursor: isLoadingImportExport ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2s ease',
-                            boxShadow: isLoadingImportExport ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.5rem'
-                          }}
-                          onMouseEnter={(e) => {
-                            if (!isLoadingImportExport) {
-                              e.currentTarget.style.backgroundColor = '#059669';
-                              e.currentTarget.style.transform = 'translateY(-1px)';
-                              e.currentTarget.style.boxShadow = '0 6px 16px rgba(16, 185, 129, 0.4)';
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (!isLoadingImportExport) {
-                              e.currentTarget.style.backgroundColor = '#10b981';
-                              e.currentTarget.style.transform = 'translateY(0)';
-                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-                            }
-                          }}
-                        >
+                        <button onClick={() => fileInputRef.current?.click()} disabled={isLoadingImportExport} className={styles.importBtn}>
                           <span>📁</span>
                           <span>Importer CSV</span>
                         </button>
@@ -412,39 +337,7 @@ const DatabasePageContent: React.FC = () => {
                         />
                       </>
                     )}
-                    <button
-                      onClick={handleExport}
-                      disabled={isLoadingImportExport}
-                      style={{
-                        padding: '0.75rem 1.5rem',
-                        backgroundColor: isLoadingImportExport ? '#94a3b8' : '#1e40af',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '8px',
-                        fontSize: '0.875rem',
-                        fontWeight: '600',
-                        cursor: isLoadingImportExport ? 'not-allowed' : 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: isLoadingImportExport ? 'none' : '0 4px 12px rgba(30, 64, 175, 0.3)',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.5rem'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isLoadingImportExport) {
-                          e.currentTarget.style.backgroundColor = '#1e3a8a';
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.4)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isLoadingImportExport) {
-                          e.currentTarget.style.backgroundColor = '#1e40af';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
-                        }
-                      }}
-                    >
+                    <button onClick={handleExport} disabled={isLoadingImportExport} className={styles.exportBtn}>
                       <span>💾</span>
                       <span>Exporter CSV</span>
                     </button>
@@ -518,21 +411,7 @@ const DatabasePageContent: React.FC = () => {
                     </div>
                     <div style={pageStyles.database.columnsGrid}>
                       {columns.map((col) => (
-                        <div
-                          key={col}
-                          title={col}
-                          style={pageStyles.database.columnBadge}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = '#eff6ff';
-                            e.currentTarget.style.borderColor = '#93c5fd';
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(30, 64, 175, 0.1)';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'white';
-                            e.currentTarget.style.borderColor = '#e2e8f0';
-                            e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.05)';
-                          }}
-                        >
+                        <div key={col} title={col} className={styles.columnBadge}>
                           {col}
                         </div>
                       ))}
@@ -587,35 +466,11 @@ const DatabasePageContent: React.FC = () => {
                             <thead>
                               <tr style={commonStyles.tableHeader}>
                                 {tableData.columns.map((col) => (
-                                  <th
-                                    key={col}
-                                    onClick={() => handleSort(col)}
-                                    style={commonStyles.tableHeaderCell}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#f1f5f9';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = '#f8fafc';
-                                    }}
-                                  >
-                                    <div style={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: '0.5rem'
-                                    }}>
-                                      <span style={{
-                                        overflow: 'hidden',
-                                        textOverflow: 'ellipsis',
-                                        whiteSpace: 'nowrap',
-                                        flex: 1
-                                      }} title={col}>
-                                        {col}
-                                      </span>
+                                  <th key={col} onClick={() => handleSort(col)} style={commonStyles.tableHeaderCell}>
+                                    <div className={styles.tableHeaderCellInner}>
+                                      <span title={col}>{col}</span>
                                       {sortColumn === col && (
-                                        <span style={{
-                                          fontSize: '0.75rem',
-                                          color: '#1e40af'
-                                        }}>
+                                        <span style={{fontSize: '0.75rem', color: '#1e40af'}}>
                                           {sortOrder === 'asc' ? '↑' : '↓'}
                                         </span>
                                       )}
@@ -626,16 +481,7 @@ const DatabasePageContent: React.FC = () => {
                             </thead>
                             <tbody>
                               {tableData.rows.map((row, idx) => (
-                                <tr
-                                  key={idx}
-                                  style={commonStyles.tableRow}
-                                  onMouseEnter={(e) => {
-                                    Object.assign(e.currentTarget.style, commonStyles.tableRowHover);
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                  }}
-                                >
+                                <tr key={idx} style={commonStyles.tableRow}>
                                   {tableData.columns.map((col) => (
                                     <td
                                       key={col}
@@ -666,17 +512,6 @@ const DatabasePageContent: React.FC = () => {
                                   ...commonStyles.paginationButton,
                                   ...(currentPage === 1 ? commonStyles.paginationButtonDisabled : commonStyles.paginationButtonEnabled),
                                 }}
-                                onMouseEnter={(e) => {
-                                  if (currentPage !== 1) {
-                                    Object.assign(e.currentTarget.style, commonStyles.paginationButtonHover);
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (currentPage !== 1) {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.borderColor = '#e2e8f0';
-                                  }
-                                }}
                               >
                                 Précédent
                               </button>
@@ -686,17 +521,6 @@ const DatabasePageContent: React.FC = () => {
                                 style={{
                                   ...commonStyles.paginationButton,
                                   ...(currentPage === totalPages ? commonStyles.paginationButtonDisabled : commonStyles.paginationButtonEnabled),
-                                }}
-                                onMouseEnter={(e) => {
-                                  if (currentPage !== totalPages) {
-                                    Object.assign(e.currentTarget.style, commonStyles.paginationButtonHover);
-                                  }
-                                }}
-                                onMouseLeave={(e) => {
-                                  if (currentPage !== totalPages) {
-                                    e.currentTarget.style.backgroundColor = 'white';
-                                    e.currentTarget.style.borderColor = '#e2e8f0';
-                                  }
                                 }}
                               >
                                 Suivant

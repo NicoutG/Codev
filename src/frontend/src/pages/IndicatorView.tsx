@@ -5,7 +5,7 @@ import { Layout } from '../components/common/Layout';
 import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { indicatorsApi, Indicator } from '../api/indicators';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
+import styles from '../styles/pages/IndicatorView.module.css';
 
 interface ExecutionResult {
   sql: string;
@@ -86,25 +86,9 @@ const IndicatorViewContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={{
-          textAlign: 'center',
-          padding: '4rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'inline-block',
-            width: '40px',
-            height: '40px',
-            border: '4px solid #e2e8f0',
-            borderTopColor: '#1e40af',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '1rem'
-          }} />
-          <p style={{ color: '#64748b' }}>Chargement de l'indicateur...</p>
+        <div className={styles.loading}>
+          <div className={styles.spinner} />
+          <p className={styles.loadingText}>Chargement de l'indicateur...</p>
         </div>
       </Layout>
     );
@@ -113,39 +97,9 @@ const IndicatorViewContent: React.FC = () => {
   if (error || !indicator) {
     return (
       <Layout>
-        <div style={{
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '12px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-          border: '1px solid #e2e8f0',
-          textAlign: 'center'
-        }}>
-          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>
-            {error || 'Indicateur introuvable'}
-          </p>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#1e40af',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#1e3a8a';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#1e40af';
-            }}
-          >
-            Retour à la liste
-          </button>
+        <div className={styles.notFound}>
+          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>{error || 'Indicateur introuvable'}</p>
+          <button onClick={() => navigate('/')} className="btn btn-primary">Retour à la liste</button>
         </div>
       </Layout>
     );
@@ -154,347 +108,68 @@ const IndicatorViewContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          marginBottom: '2rem'
-        }}>
-          <div style={{ flex: 1 }}>
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: '700',
-              color: '#1e293b',
-              marginBottom: '0.5rem',
-              letterSpacing: '-0.02em'
-            }}>
-              {indicator.title}
-            </h1>
-            {indicator.description && (
-              <p style={{
-                fontSize: '0.9375rem',
-                color: '#64748b',
-                marginBottom: '1rem',
-                lineHeight: '1.6'
-              }}>
-                {indicator.description}
-              </p>
-            )}
-            <div style={{
-              display: 'flex',
-              gap: '1.5rem',
-              fontSize: '0.8125rem',
-              color: '#94a3b8'
-            }}>
+        <div className={styles.headerRow}>
+          <div className={styles.headerLeft}>
+            <h1 className={styles.title}>{indicator.title}</h1>
+            {indicator.description && <p className={styles.subtitle}>{indicator.description}</p>}
+            <div className={styles.metaRow}>
               <span>Créé le {formatDate(indicator.created_at)}</span>
-              {indicator.updated_at && indicator.updated_at !== indicator.created_at && (
-                <span>Modifié le {formatDate(indicator.updated_at)}</span>
-              )}
+              {indicator.updated_at && indicator.updated_at !== indicator.created_at && (<span>Modifié le {formatDate(indicator.updated_at)}</span>)}
             </div>
           </div>
-          <div style={{
-            display: 'flex',
-            gap: '0.75rem'
-          }}>
-            <button
-              onClick={executeIndicator}
-              disabled={isExecuting}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: isExecuting ? '#94a3b8' : '#1e40af',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.9375rem',
-                fontWeight: '500',
-                cursor: isExecuting ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: isExecuting ? 'none' : '0 4px 12px rgba(30, 64, 175, 0.3)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem'
-              }}
-              onMouseEnter={(e) => {
-                if (!isExecuting) {
-                  e.currentTarget.style.backgroundColor = '#1e3a8a';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.4)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isExecuting) {
-                  e.currentTarget.style.backgroundColor = '#1e40af';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.3)';
-                }
-              }}
-            >
-              {isExecuting ? '⏳ Exécution...' : '▶️ Exécuter l\'indicateur'}
-            </button>
-            {isEditeur && (
-              <button
-                onClick={() => navigate(`/indicators/${indicator.id}/edit`)}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#10b981',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(16, 185, 129, 0.2)'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#059669';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#10b981';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                Modifier
-              </button>
-            )}
+          <div className={styles.actions}>
+            <button onClick={executeIndicator} disabled={isExecuting} className="btn btn-primary">{isExecuting ? '⏳ Exécution...' : "▶️ Exécuter l'indicateur"}</button>
+            {isEditeur && <button onClick={() => navigate(`/indicators/${indicator.id}/edit`)} className="btn btn-success">Modifier</button>}
           </div>
         </div>
 
         {/* Onglets */}
-        <div style={{
-          display: 'flex',
-          gap: '0.5rem',
-          marginBottom: '2rem',
-          borderBottom: '2px solid #e2e8f0'
-        }}>
-          <button
-            onClick={() => setActiveTab('config')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: 'transparent',
-              color: activeTab === 'config' ? '#1e40af' : '#64748b',
-              border: 'none',
-              borderBottom: activeTab === 'config' ? '3px solid #1e40af' : '3px solid transparent',
-              borderRadius: '0',
-              fontSize: '0.9375rem',
-              fontWeight: activeTab === 'config' ? '600' : '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              marginBottom: '-2px'
-            }}
-            onMouseEnter={(e) => {
-              if (activeTab !== 'config') {
-                e.currentTarget.style.color = '#475569';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== 'config') {
-                e.currentTarget.style.color = '#64748b';
-              }
-            }}
-          >
-            Configuration
-          </button>
-          <button
-            onClick={() => setActiveTab('results')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: 'transparent',
-              color: activeTab === 'results' ? '#1e40af' : '#64748b',
-              border: 'none',
-              borderBottom: activeTab === 'results' ? '3px solid #1e40af' : '3px solid transparent',
-              borderRadius: '0',
-              fontSize: '0.9375rem',
-              fontWeight: activeTab === 'results' ? '600' : '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              marginBottom: '-2px'
-            }}
-            onMouseEnter={(e) => {
-              if (activeTab !== 'results') {
-                e.currentTarget.style.color = '#475569';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (activeTab !== 'results') {
-                e.currentTarget.style.color = '#64748b';
-              }
-            }}
-          >
-            Résultats {executionResult && `(${executionResult.row_count})`}
-          </button>
+        <div className={styles.tabs}>
+          <button onClick={() => setActiveTab('config')} className={`${styles.tabButton} ${activeTab === 'config' ? styles.tabButtonActive : ''}`}>Configuration</button>
+          <button onClick={() => setActiveTab('results')} className={`${styles.tabButton} ${activeTab === 'results' ? styles.tabButtonActive : ''}`}>Résultats {executionResult && `(${executionResult.row_count})`}</button>
         </div>
 
         {/* Contenu des onglets */}
         {activeTab === 'config' && (
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-            border: '1px solid #e2e8f0',
-            marginBottom: '1.5rem'
-          }}>
-            <h2 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: '#1e293b',
-              marginBottom: '1rem'
-            }}>
-              Configuration de l'indicateur
-            </h2>
-            <pre style={{
-              backgroundColor: '#f8fafc',
-              padding: '1.5rem',
-              borderRadius: '8px',
-              overflow: 'auto',
-              fontSize: '0.875rem',
-              lineHeight: '1.6',
-              color: '#1e293b',
-              border: '1px solid #e2e8f0',
-              maxHeight: '600px'
-            }}>
-              {JSON.stringify(indicator.indicator, null, 2)}
-            </pre>
+          <div className={styles.card}>
+            <h2 className={styles.sectionTitle}>Configuration de l'indicateur</h2>
+            <pre className={styles.preBlock}>{JSON.stringify(indicator.indicator, null, 2)}</pre>
           </div>
         )}
 
         {activeTab === 'results' && (
-          <div style={{
-            backgroundColor: 'white',
-            padding: '2rem',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-            border: '1px solid #e2e8f0',
-            marginBottom: '1.5rem'
-          }}>
-            {executionError && (
-              <div style={{
-                marginBottom: '1.5rem',
-                padding: '1rem',
-                backgroundColor: '#fef2f2',
-                color: '#991b1b',
-                borderRadius: '8px',
-                border: '1px solid #fecaca',
-                fontSize: '0.875rem'
-              }}>
-                {executionError}
-              </div>
-            )}
+          <div className={styles.card}>
+            {executionError && <div className={styles.notFound} style={{ marginBottom: '1rem', backgroundColor: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', padding: '1rem' }}>{executionError}</div>}
 
             {isExecuting ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '4rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{
-                  display: 'inline-block',
-                  width: '40px',
-                  height: '40px',
-                  border: '4px solid #e2e8f0',
-                  borderTopColor: '#1e40af',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  marginBottom: '1rem'
-                }} />
-                <p style={{ color: '#64748b' }}>Exécution de l'indicateur en cours...</p>
+              <div className={styles.loading} style={{ backgroundColor: '#f8fafc', borderRadius: '8px' }}>
+                <div className={styles.spinner} />
+                <p className={styles.loadingText}>Exécution de l'indicateur en cours...</p>
               </div>
             ) : executionResult ? (
               <>
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '1.5rem',
-                  paddingBottom: '1rem',
-                  borderBottom: '2px solid #e2e8f0'
-                }}>
+                <div className={styles.resultHeader}>
                   <div>
-                    <h2 style={{
-                      fontSize: '1.25rem',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                      marginBottom: '0.5rem'
-                    }}>
-                      Résultats de l'exécution
-                    </h2>
-                    <p style={{
-                      fontSize: '0.875rem',
-                      color: '#64748b'
-                    }}>
-                      {executionResult.row_count} ligne{executionResult.row_count > 1 ? 's' : ''} retournée{executionResult.row_count > 1 ? 's' : ''}
-                    </p>
+                    <h2 className={styles.sectionTitle}>Résultats de l'exécution</h2>
+                    <p className={styles.resultCount}>{executionResult.row_count} ligne{executionResult.row_count > 1 ? 's' : ''} retournée{executionResult.row_count > 1 ? 's' : ''}</p>
                   </div>
                 </div>
 
                 {executionResult.rows.length > 0 ? (
-                  <div style={{
-                    overflowX: 'auto',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    backgroundColor: 'white'
-                  }}>
-                    <table style={{
-                      width: '100%',
-                      borderCollapse: 'collapse',
-                      minWidth: '600px'
-                    }}>
+                  <div className={styles.tableWrap}>
+                    <table className={styles.table}>
                       <thead>
-                        <tr style={{ backgroundColor: '#f8fafc' }}>
+                        <tr className={styles.theadRow}>
                           {executionResult.columns.map((col) => (
-                            <th
-                              key={col}
-                              style={{
-                                padding: '0.875rem 1rem',
-                                textAlign: 'left',
-                                fontSize: '0.75rem',
-                                fontWeight: '600',
-                                color: '#64748b',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.05em',
-                                borderBottom: '2px solid #e2e8f0'
-                              }}
-                            >
-                              {col}
-                            </th>
+                            <th key={col} className={styles.th}>{col}</th>
                           ))}
                         </tr>
                       </thead>
                       <tbody>
                         {executionResult.rows.map((row, idx) => (
-                          <tr
-                            key={idx}
-                            style={{
-                              borderBottom: '1px solid #e2e8f0',
-                              transition: 'background-color 0.2s ease'
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#f8fafc';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'white';
-                            }}
-                          >
+                          <tr key={idx} className={styles.tr}>
                             {executionResult.columns.map((col) => (
-                              <td
-                                key={col}
-                                style={{
-                                  padding: '0.875rem 1rem',
-                                  fontSize: '0.875rem',
-                                  color: '#1e293b',
-                                  maxWidth: '300px',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap'
-                                }}
-                                title={formatCellValue(row[col])}
-                              >
-                                {formatCellValue(row[col])}
-                              </td>
+                              <td key={col} className={styles.td} title={formatCellValue(row[col])}>{formatCellValue(row[col])}</td>
                             ))}
                           </tr>
                         ))}
@@ -502,106 +177,27 @@ const IndicatorViewContent: React.FC = () => {
                     </table>
                   </div>
                 ) : (
-                  <div style={{
-                    textAlign: 'center',
-                    padding: '4rem',
-                    backgroundColor: '#f8fafc',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0'
-                  }}>
-                    <p style={{
-                      fontSize: '1rem',
-                      color: '#64748b'
-                    }}>
-                      Aucun résultat retourné par l'indicateur
-                    </p>
+                  <div className={styles.emptyState}>
+                    <p className={styles.emptyStateText}>Aucun résultat retourné par l'indicateur</p>
                   </div>
                 )}
 
-                <details style={{
-                  marginTop: '2rem',
-                  padding: '1rem',
-                  backgroundColor: '#f8fafc',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <summary style={{
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    color: '#1e293b',
-                    marginBottom: '0.5rem'
-                  }}>
-                    Voir la requête SQL générée
-                  </summary>
-                  <pre style={{
-                    marginTop: '1rem',
-                    padding: '1rem',
-                    backgroundColor: '#1e293b',
-                    color: '#e2e8f0',
-                    borderRadius: '6px',
-                    overflow: 'auto',
-                    fontSize: '0.8125rem',
-                    lineHeight: '1.5'
-                  }}>
-                    {executionResult.sql}
-                  </pre>
+                <details className={styles.detailsBlock}>
+                  <summary className={styles.detailsSummary}>Voir la requête SQL générée</summary>
+                  <pre className={styles.sqlPre}>{executionResult.sql}</pre>
                 </details>
               </>
             ) : (
-              <div style={{
-                textAlign: 'center',
-                padding: '4rem',
-                backgroundColor: '#f8fafc',
-                borderRadius: '8px',
-                border: '1px solid #e2e8f0'
-              }}>
-                <p style={{
-                  fontSize: '1rem',
-                  color: '#64748b',
-                  marginBottom: '1rem'
-                }}>
-                  Aucun résultat disponible
-                </p>
-                <p style={{
-                  fontSize: '0.875rem',
-                  color: '#94a3b8'
-                }}>
-                  Cliquez sur "Exécuter l'indicateur" pour voir les résultats
-                </p>
+              <div className={styles.emptyState}>
+                <p className={styles.emptyStateText}>Aucun résultat disponible</p>
+                <p className={styles.emptyStateSub}>Cliquez sur "Exécuter l'indicateur" pour voir les résultats</p>
               </div>
             )}
           </div>
         )}
 
-        <div style={{
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'flex-end'
-        }}>
-          <button
-            onClick={() => navigate('/')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#f1f5f9',
-              color: '#64748b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#e2e8f0';
-              e.currentTarget.style.color = '#475569';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9';
-              e.currentTarget.style.color = '#64748b';
-            }}
-          >
-            Retour à la liste
-          </button>
+        <div className={styles.footerRow}>
+          <button onClick={() => navigate('/')} className={styles.backButton}>Retour à la liste</button>
         </div>
       </div>
     </Layout>

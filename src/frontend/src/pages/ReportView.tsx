@@ -6,7 +6,7 @@ import { ProtectedRoute } from '../components/common/ProtectedRoute';
 import { reportsApi, Report, ReportGenerateResponse } from '../api/reports';
 import { Chart } from '../components/charts/Chart';
 import { commonStyles } from '../styles/common';
-import { pageStyles } from '../styles/pages';
+import styles from '../styles/pages/ReportView.module.css';
 
 const exportFormats = [
   { value: 'json', label: 'JSON' },
@@ -110,9 +110,9 @@ const ReportViewContent: React.FC = () => {
   if (isLoading) {
     return (
       <Layout>
-        <div style={commonStyles.loadingContainer}>
-          <div style={commonStyles.loadingSpinner} />
-          <p style={{ color: '#64748b' }}>Chargement du rapport...</p>
+        <div className={styles.generating}>
+          <div className={styles.generatingSpinner} />
+          <p className={styles.generatingText}>Chargement du rapport...</p>
         </div>
       </Layout>
     );
@@ -121,19 +121,9 @@ const ReportViewContent: React.FC = () => {
   if (error && !report) {
     return (
       <Layout>
-        <div style={{
-          ...commonStyles.card,
-          textAlign: 'center' as const
-        }}>
-          <p style={{ color: '#ef4444', marginBottom: '1rem' }}>
-            {error}
-          </p>
-          <button
-            onClick={() => navigate('/reports')}
-            style={commonStyles.buttonPrimary}
-          >
-            Retour à la liste
-          </button>
+        <div className={`${styles.indicatorCard} ${styles.centerText}`}>
+          <p className={styles.errorText}>{error}</p>
+          <button onClick={() => navigate('/reports')} className="btn btn-primary">Retour à la liste</button>
         </div>
       </Layout>
     );
@@ -144,94 +134,23 @@ const ReportViewContent: React.FC = () => {
   return (
     <Layout>
       <div>
-        <div style={commonStyles.flexRowBetween}>
-          <div style={{ flex: 1 }}>
-            <h1 style={commonStyles.pageTitle}>
-              {report.title}
-            </h1>
-            {report.description && (
-              <p style={{
-                ...commonStyles.pageSubtitle,
-                marginBottom: '1rem',
-                lineHeight: '1.6'
-              }}>
-                {report.description}
-              </p>
-            )}
-            <div style={{
-              fontSize: '0.8125rem',
-              color: '#94a3b8'
-            }}>
-              {report.indicators.length} indicateur{report.indicators.length > 1 ? 's' : ''} dans ce rapport
-            </div>
+        <div className={styles.header}>
+          <div className={styles.flex1}>
+            <h1 className={styles.title}>{report.title}</h1>
+            {report.description && <p className={styles.subtitle}>{report.description}</p>}
+            <div className={styles.infoSmall}>{report.indicators.length} indicateur{report.indicators.length > 1 ? 's' : ''} dans ce rapport</div>
           </div>
-          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
-              onClick={generateReport}
-              disabled={isGenerating}
-              style={{
-                ...commonStyles.buttonSuccess,
-                ...(isGenerating ? commonStyles.buttonPrimaryDisabled : {}),
-              }}
-              onMouseEnter={(e) => {
-                if (!isGenerating) {
-                  Object.assign(e.currentTarget.style, commonStyles.buttonSuccessHover);
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isGenerating) {
-                  e.currentTarget.style.backgroundColor = '#10b981';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.3)';
-                }
-              }}
-            >
+          <div className={styles.actions}>
+            <button onClick={generateReport} disabled={isGenerating} className={`btn ${isGenerating ? 'btn-secondary' : 'btn-success'}`}>
               {isGenerating ? '⏳ Génération...' : '▶️ Générer le rapport'}
             </button>
             {(isEditeur || isAdmin) && (
-              <Link
-                to={`/reports/${report.id}/edit`}
-                style={{
-                  padding: '0.75rem 1.5rem',
-                  backgroundColor: '#e0e7ff',
-                  color: '#1e40af',
-                  textDecoration: 'none',
-                  borderRadius: '8px',
-                  fontSize: '0.9375rem',
-                  fontWeight: '500',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 4px rgba(30, 64, 175, 0.1)',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#c7d2fe';
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#e0e7ff';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                Modifier
-              </Link>
+              <Link to={`/reports/${report.id}/edit`} className={styles.linkButton}>Modifier</Link>
             )}
             {generatedReport && (
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div className={styles.rowGap}>
                 {exportFormats.map(format => (
-                  <button
-                    key={format.value}
-                    onClick={() => handleExport(format.value)}
-                    style={commonStyles.buttonSecondary}
-                    onMouseEnter={(e) => {
-                      Object.assign(e.currentTarget.style, commonStyles.buttonSecondaryHover);
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f1f5f9';
-                      e.currentTarget.style.color = '#64748b';
-                    }}
-                  >
+                  <button key={format.value} onClick={() => handleExport(format.value)} className="btn btn-secondary">
                     📥 {format.label}
                   </button>
                 ))}
@@ -240,90 +159,31 @@ const ReportViewContent: React.FC = () => {
           </div>
         </div>
 
-        {error && (
-          <div style={{
-            marginBottom: '1.5rem',
-            padding: '1rem',
-            backgroundColor: '#fef2f2',
-            color: '#991b1b',
-            borderRadius: '8px',
-            border: '1px solid #fecaca',
-            fontSize: '0.875rem'
-          }}>
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.errorBox}>{error}</div>}
 
         {isGenerating ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '4rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            border: '1px solid #e2e8f0'
-          }}>
-            <div style={{
-              display: 'inline-block',
-              width: '40px',
-              height: '40px',
-              border: '4px solid #e2e8f0',
-              borderTopColor: '#1e40af',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-              marginBottom: '1rem'
-            }} />
-            <p style={{ color: '#64748b' }}>Génération du rapport en cours...</p>
+          <div className={styles.generating}>
+            <div className={styles.generatingSpinner} />
+            <p className={styles.generatingText}>Génération du rapport en cours...</p>
           </div>
         ) : generatedReport ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          <div className={styles.resultsContainer}>
             {generatedReport.results.map((result, idx) => {
               const indicatorConfig = report.indicators.find(i => i.id === result.indicator_id);
               const hasError = result.execution_result.error;
               
               return (
-                <div
-                  key={result.indicator_id}
-                  style={{
-                    backgroundColor: 'white',
-                    borderRadius: '12px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-                    border: '1px solid #e2e8f0',
-                    padding: '2rem'
-                  }}
-                >
-                  <div style={{
-                    marginBottom: '1.5rem',
-                    paddingBottom: '1rem',
-                    borderBottom: '2px solid #e2e8f0'
-                  }}>
-                    <h2 style={{
-                      fontSize: '1.5rem',
-                      fontWeight: '600',
-                      color: '#1e293b',
-                      marginBottom: '0.5rem'
-                    }}>
-                      {result.indicator_title}
-                    </h2>
-                    {hasError && (
-                      <div style={{
-                        padding: '0.75rem',
-                        backgroundColor: '#fef2f2',
-                        color: '#991b1b',
-                        borderRadius: '6px',
-                        fontSize: '0.875rem',
-                        marginTop: '0.5rem'
-                      }}>
-                        Erreur: {result.execution_result.error}
-                      </div>
-                    )}
+                <div key={result.indicator_id} className={styles.indicatorCard}>
+                  <div className={styles.indicatorHeader}>
+                    <h2 className={styles.indicatorTitle}>{result.indicator_title}</h2>
+                    {hasError && <div className={styles.indicatorError}>Erreur: {result.execution_result.error}</div>}
                   </div>
 
                   {!hasError && result.execution_result.rows.length > 0 && (
                     <>
                       {/* Graphique si configuré */}
                       {indicatorConfig?.chart_type && (
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div className={styles.chartWrapper}>
                           <Chart
                             type={indicatorConfig.chart_type as 'bar' | 'line' | 'pie' | 'area'}
                             data={result.execution_result.rows}
@@ -335,67 +195,20 @@ const ReportViewContent: React.FC = () => {
                       )}
 
                       {/* Tableau des résultats */}
-                      <div style={{
-                        overflowX: 'auto',
-                        borderRadius: '8px',
-                        border: '1px solid #e2e8f0',
-                        backgroundColor: 'white'
-                      }}>
-                        <table style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          minWidth: '600px'
-                        }}>
+                      <div className={styles.resultsWrapper}>
+                        <table className={styles.resultsTable}>
                           <thead>
-                            <tr style={{ backgroundColor: '#f8fafc' }}>
+                            <tr className={styles.resultsHeaderRow}>
                               {result.execution_result.columns.map((col) => (
-                                <th
-                                  key={col}
-                                  style={{
-                                    padding: '0.875rem 1rem',
-                                    textAlign: 'left',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '600',
-                                    color: '#64748b',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.05em',
-                                    borderBottom: '2px solid #e2e8f0'
-                                  }}
-                                >
-                                  {col}
-                                </th>
+                                <th key={col} className={styles.resultsHeaderCell}>{col}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
                             {result.execution_result.rows.map((row, rowIdx) => (
-                              <tr
-                                key={rowIdx}
-                                style={{
-                                  borderBottom: '1px solid #e2e8f0',
-                                  transition: 'background-color 0.2s ease'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = '#f8fafc';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = 'white';
-                                }}
-                              >
+                              <tr key={rowIdx} className={styles.resultsRowHover}>
                                 {result.execution_result.columns.map((col) => (
-                                  <td
-                                    key={col}
-                                    style={{
-                                      padding: '0.875rem 1rem',
-                                      fontSize: '0.875rem',
-                                      color: '#1e293b',
-                                      maxWidth: '300px',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap'
-                                    }}
-                                    title={formatCellValue(row[col])}
-                                  >
+                                  <td key={col} className={styles.resultsCell} title={formatCellValue(row[col])}>
                                     {formatCellValue(row[col])}
                                   </td>
                                 ))}
@@ -405,31 +218,13 @@ const ReportViewContent: React.FC = () => {
                         </table>
                       </div>
 
-                      <div style={{
-                        marginTop: '1rem',
-                        fontSize: '0.875rem',
-                        color: '#64748b',
-                        textAlign: 'right'
-                      }}>
-                        {result.execution_result.row_count} ligne{result.execution_result.row_count > 1 ? 's' : ''}
-                      </div>
+                      <div className={styles.resultsCount}>{result.execution_result.row_count} ligne{result.execution_result.row_count > 1 ? 's' : ''}</div>
                     </>
                   )}
 
                   {!hasError && result.execution_result.rows.length === 0 && (
-                    <div style={{
-                      textAlign: 'center',
-                      padding: '3rem',
-                      backgroundColor: '#f8fafc',
-                      borderRadius: '8px',
-                      border: '1px solid #e2e8f0'
-                    }}>
-                      <p style={{
-                        fontSize: '1rem',
-                        color: '#64748b'
-                      }}>
-                        Aucun résultat retourné par cet indicateur
-                      </p>
+                    <div className={styles.emptyResult}>
+                      <p className={styles.emptyResultText}>Aucun résultat retourné par cet indicateur</p>
                     </div>
                   )}
                 </div>
@@ -437,86 +232,15 @@ const ReportViewContent: React.FC = () => {
             })}
           </div>
         ) : (
-          <div style={{
-            padding: '4rem',
-            backgroundColor: 'white',
-            borderRadius: '12px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-            textAlign: 'center',
-            border: '1px solid #e2e8f0'
-          }}>
-            <p style={{
-              fontSize: '1.125rem',
-              color: '#64748b',
-              marginBottom: '1rem'
-            }}>
-              Aucun résultat généré
-            </p>
-            <p style={{
-              fontSize: '0.875rem',
-              color: '#94a3b8',
-              marginBottom: '1.5rem'
-            }}>
-              Cliquez sur "Générer le rapport" pour exécuter tous les indicateurs et afficher les résultats
-            </p>
-            <button
-              onClick={generateReport}
-              style={{
-                padding: '0.75rem 1.5rem',
-                backgroundColor: '#1e40af',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '0.9375rem',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: '0 4px 12px rgba(30, 64, 175, 0.3)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e3a8a';
-                e.currentTarget.style.transform = 'translateY(-1px)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#1e40af';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              Générer le rapport
-            </button>
+          <div className={styles.noGenerated}>
+            <p className={styles.noGeneratedTitle}>Aucun résultat généré</p>
+            <p className={styles.noGeneratedSubtitle}>Cliquez sur "Générer le rapport" pour exécuter tous les indicateurs et afficher les résultats</p>
+            <button onClick={generateReport} className="btn btn-success">Générer le rapport</button>
           </div>
         )}
 
-        <div style={{
-          marginTop: '2rem',
-          display: 'flex',
-          gap: '1rem',
-          justifyContent: 'flex-end'
-        }}>
-          <button
-            onClick={() => navigate('/reports')}
-            style={{
-              padding: '0.75rem 1.5rem',
-              backgroundColor: '#f1f5f9',
-              color: '#64748b',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '0.9375rem',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#e2e8f0';
-              e.currentTarget.style.color = '#475569';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#f1f5f9';
-              e.currentTarget.style.color = '#64748b';
-            }}
-          >
-            Retour à la liste
-          </button>
+        <div className={styles.footerActions}>
+          <button onClick={() => navigate('/reports')} className="btn btn-secondary">Retour à la liste</button>
         </div>
       </div>
     </Layout>
